@@ -1,11 +1,21 @@
 <?php
+// Error Reporting für Debugging aktivieren
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('log_errors', 1);
+
 require_once 'config.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 $requestUri = $_SERVER['REQUEST_URI'];
 
 // Request Body parsen
-$input = json_decode(file_get_contents('php://input'), true);
+$rawInput = file_get_contents('php://input');
+$input = json_decode($rawInput, true);
+
+// Log für Debugging
+error_log("API Request: $method " . $_SERVER['REQUEST_URI']);
+error_log("Raw Input: " . substr($rawInput, 0, 200));
 
 // Route: GET /api/tours.php - Alle Touren abrufen
 if ($method === 'GET' && !isset($_GET['id'])) {
