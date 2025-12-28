@@ -43,31 +43,37 @@ function saveToursData($data) {
     // Verzeichnis prüfen
     $dir = dirname(DATA_FILE);
     if (!is_dir($dir)) {
-        error_log("ERROR: Data directory does not exist: $dir");
-        return false;
+        $errorMsg = "Data directory does not exist: $dir";
+        error_log("ERROR: $errorMsg");
+        return ['success' => false, 'error' => $errorMsg];
     }
     if (!is_writable($dir)) {
-        error_log("ERROR: Data directory is not writable: $dir");
-        return false;
+        $dirPerms = substr(sprintf('%o', fileperms($dir)), -4);
+        $errorMsg = "Data directory is not writable: $dir (permissions: $dirPerms, PHP user: " . get_current_user() . ")";
+        error_log("ERROR: $errorMsg");
+        return ['success' => false, 'error' => $errorMsg];
     }
 
     // JSON encodieren
     $jsonContent = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     if ($jsonContent === false) {
-        error_log("ERROR: JSON encoding failed: " . json_last_error_msg());
-        return false;
+        $errorMsg = "JSON encoding failed: " . json_last_error_msg();
+        error_log("ERROR: $errorMsg");
+        return ['success' => false, 'error' => $errorMsg];
     }
 
     // Datei schreiben
     $result = file_put_contents(DATA_FILE, $jsonContent);
     if ($result === false) {
-        $error = error_get_last();
-        error_log("ERROR: Failed to write to file: " . DATA_FILE . " - " . ($error['message'] ?? 'Unknown error'));
-        return false;
+        $phpError = error_get_last();
+        $filePerms = file_exists(DATA_FILE) ? substr(sprintf('%o', fileperms(DATA_FILE)), -4) : 'N/A';
+        $errorMsg = "Failed to write to file: " . DATA_FILE . " (permissions: $filePerms) - " . ($phpError['message'] ?? 'Unknown error');
+        error_log("ERROR: $errorMsg");
+        return ['success' => false, 'error' => $errorMsg];
     }
 
     error_log("SUCCESS: Saved " . strlen($jsonContent) . " bytes to " . DATA_FILE);
-    return true;
+    return ['success' => true, 'error' => null];
 }
 
 // Hilfsfunktion: Eindeutige ID generieren
