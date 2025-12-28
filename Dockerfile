@@ -14,8 +14,8 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Apache mod_rewrite aktivieren
-RUN a2enmod rewrite
+# Apache mod_rewrite und mod_headers aktivieren
+RUN a2enmod rewrite headers
 
 # PHP Konfiguration
 RUN { \
