@@ -5,17 +5,17 @@
 
 /* CSS-Variablen für konsistente Farbgebung */
 :root {
-    --color-primary: #2C3E50;       /* Dunkelblau */
-    --color-secondary: #E8B87E;     /* Warmes Gold */
-    --color-accent: #C0775C;        /* Terrakotta */
-    --color-background: #F5F5DC;    /* Beige */
-    --color-text: #333333;          /* Dunkelgrau */
-    --color-text-light: #666666;    /* Hellgrau */
+    --color-primary: #003288;       /* Kulturspiegel Blau */
+    --color-secondary: #e0ebff;     /* Heller Blau Hintergrund */
+    --color-accent: #ef3b40;        /* Kulturspiegel Rot */
+    --color-background: #e0ebff;    /* Heller Blau Hintergrund */
+    --color-text: #003288;          /* Kulturspiegel Blau */
+    --color-text-light: #0047b3;    /* Helleres Blau */
     --color-white: #FFFFFF;
     --color-success: #4A7C59;       /* Grün */
-    --color-danger: #C0392B;        /* Rot */
+    --color-danger: #ef3b40;        /* Kulturspiegel Rot */
     --border-radius: 8px;
-    --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --box-shadow: 0 2px 8px rgba(0, 50, 136, 0.1);
     --transition: all 0.3s ease;
 }
 
@@ -380,6 +380,42 @@ footer {
     text-align: center;
     padding: 1.5rem 0;
     margin-top: 3rem;
+}
+
+footer .logo {
+    max-width: 200px;
+    height: auto;
+    margin-bottom: 1rem;
+}
+
+footer p {
+    margin: 0.5rem 0;
+}
+
+/* PayPal Spenden-Button */
+#donate-button-container {
+    background-color: var(--color-secondary);
+    color: var(--color-text);
+    padding: 1.5rem;
+    text-align: center;
+    border-top: 3px solid var(--color-accent);
+}
+
+#donate-button-container h3 {
+    color: var(--color-text);
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+#donate-button-container p {
+    color: var(--color-text);
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+#donate-button {
+    margin: 0 auto;
+    display: inline-block;
 }
 
 /* Responsive Design - Tablet */

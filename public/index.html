@@ -10,7 +10,10 @@
 <body>
     <header>
         <div class="container">
-            <h1>📍 Virtuelle Stadtführungen</h1>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+                <img src="img/logo.png" alt="Kulturspiegel Odenthal" class="logo" style="max-height: 60px;">
+                <h1>📍 Virtuelle Stadtführungen</h1>
+            </div>
             <nav>
                 <ul>
                     <li><a href="index.html" class="active">Touren</a></li>
@@ -46,9 +49,29 @@
         </div>
     </main>
 
+    <div id="donate-button-container">
+        <h3>Unterstützen Sie uns!</h3>
+        <p>Ihre Spende hilft uns, weitere virtuelle Stadtführungen zu erstellen</p>
+        <div id="donate-button"></div>
+        <script src="https://www.paypalobjects.com/donate/sdk/donate-sdk.js" charset="UTF-8"></script>
+        <script>
+        PayPal.Donation.Button({
+        env:'production',
+        hosted_button_id:'DRTBYRML7NHSA',
+        image: {
+        src:'https://www.paypalobjects.com/de_DE/DE/i/btn/btn_donate_SM.gif',
+        alt:'Spenden mit dem PayPal-Button',
+        title:'PayPal - The safer, easier way to pay online!',
+        }
+        }).render('#donate-button');
+        </script>
+    </div>
+
     <footer>
         <div class="container">
-            <p>&copy; 2025 Virtuelle Stadtführungen | Entwickelt mit ❤️ für mobile Geräte</p>
+            <img src="img/logo.png" alt="Kulturspiegel Odenthal" class="logo">
+            <p>&copy; 2025 Verein zur Förderung der Kultur in Odenthal e.V.</p>
+            <p>Virtuelle Stadtführungen | Entwickelt mit ❤️ für mobile Geräte</p>
         </div>
     </footer>
 
