@@ -63,10 +63,11 @@ if ($method === 'POST') {
 
     $tours[] = $newTour;
 
-    if (saveToursData($tours)) {
+    $saveResult = saveToursData($tours);
+    if ($saveResult['success']) {
         sendJsonResponse($newTour, 201);
     } else {
-        sendError('Fehler beim Speichern der Tour', 500);
+        sendError('Fehler beim Speichern der Tour: ' . $saveResult['error'], 500);
     }
 }
 
@@ -105,10 +106,11 @@ if ($method === 'PUT' && isset($_GET['id'])) {
         sendError('Tour nicht gefunden', 404);
     }
 
-    if (saveToursData($tours)) {
+    $saveResult = saveToursData($tours);
+    if ($saveResult['success']) {
         sendJsonResponse($updatedTour);
     } else {
-        sendError('Fehler beim Aktualisieren der Tour', 500);
+        sendError('Fehler beim Aktualisieren der Tour: ' . $saveResult['error'], 500);
     }
 }
 
@@ -126,10 +128,11 @@ if ($method === 'DELETE' && isset($_GET['id'])) {
         sendError('Tour nicht gefunden', 404);
     }
 
-    if (saveToursData($tours)) {
+    $saveResult = saveToursData($tours);
+    if ($saveResult['success']) {
         sendJsonResponse(['message' => 'Tour erfolgreich gelöscht']);
     } else {
-        sendError('Fehler beim Löschen der Tour', 500);
+        sendError('Fehler beim Löschen der Tour: ' . $saveResult['error'], 500);
     }
 }
 

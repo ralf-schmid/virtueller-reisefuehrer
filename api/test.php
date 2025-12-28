@@ -69,6 +69,7 @@ $testData = [
     ]
 ];
 
+// Direkt file_put_contents verwenden (ohne API-Funktion)
 $jsonContent = json_encode($testData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 $writeResult = @file_put_contents($dataFile, $jsonContent);
 
@@ -111,7 +112,8 @@ $result['process'] = [
 $apiTest = [
     'name' => 'API-Check',
     'config_loadable' => false,
-    'tours_loadable' => false
+    'tours_loadable' => false,
+    'save_test' => false
 ];
 
 try {
@@ -122,6 +124,22 @@ try {
     $tours = loadToursData();
     $apiTest['tours_loadable'] = true;
     $apiTest['tour_count'] = count($tours);
+
+    // saveToursData() testen mit echter API-Funktion
+    $testTour = [
+        'id' => 'api-test-' . time(),
+        'name' => 'API Test Tour',
+        'beschreibung' => 'Test via saveToursData() um ' . date('H:i:s'),
+        'bild' => '',
+        'elemente' => []
+    ];
+    $saveResult = saveToursData([$testTour]);
+    $apiTest['save_test'] = $saveResult['success'];
+    if (!$saveResult['success']) {
+        $apiTest['save_error'] = $saveResult['error'];
+        $result['errors'][] = 'saveToursData() fehlgeschlagen: ' . $saveResult['error'];
+        $result['status'] = 'error';
+    }
 } catch (Exception $e) {
     $apiTest['error'] = $e->getMessage();
     $result['errors'][] = 'API-Fehler: ' . $e->getMessage();
