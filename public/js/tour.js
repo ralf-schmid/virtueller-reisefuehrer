@@ -11,6 +11,31 @@ let userMarker = null;
 let tourData = null;
 let watchId = null;
 let visitedElements = new Set();
+let imageDataUrls = new Map(); // Cache für geladene Bilder als data URLs
+
+// Hilfsfunktion: Bild laden und in data URL konvertieren
+async function loadImageAsDataUrl(url) {
+    if (!url) return null;
+    if (imageDataUrls.has(url)) return imageDataUrls.get(url);
+
+    try {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const dataUrl = reader.result;
+                imageDataUrls.set(url, dataUrl);
+                resolve(dataUrl);
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    } catch (error) {
+        console.error('Fehler beim Laden des Bildes:', url, error);
+        return null;
+    }
+}
 
 // LocalStorage für besuchte Elemente
 function loadVisitedElements() {
@@ -138,7 +163,7 @@ function startGeolocation() {
 }
 
 // Karte initialisieren
-function initMap() {
+async function initMap() {
     map = new OpenLayers.Map('karte');
     map.addLayer(new OpenLayers.Layer.OSM());
 
@@ -149,8 +174,8 @@ function initMap() {
     // Benutzerposition als Marker hinzufügen
     updateUserMarker();
 
-    // Tour-Elemente als Marker hinzufügen
-    addTourMarkers();
+    // Tour-Elemente als Marker hinzufügen (async wegen Bildladung)
+    await addTourMarkers();
 
     // Karte auf Benutzerposition zentrieren
     const lonLat = new OpenLayers.LonLat(currentPosition.lon, currentPosition.lat)
@@ -165,7 +190,7 @@ function initMap() {
 }
 
 // Karte mit Standardposition initialisieren (wenn Geolokation fehlschlägt)
-function initMapWithDefaultPosition() {
+async function initMapWithDefaultPosition() {
     // Erste Element-Position als Fallback verwenden
     if (tourData.elemente && tourData.elemente.length > 0) {
         currentPosition = {
@@ -177,7 +202,7 @@ function initMapWithDefaultPosition() {
         currentPosition = { lat: 51.0344, lon: 7.1089 };
     }
 
-    initMap();
+    await initMap();
     displayElements();
 }
 
@@ -213,9 +238,15 @@ function updateUserMarker() {
     markersLayer.addMarker(userMarker);
 }
 
-// Tour-Marker hinzufügen
-function addTourMarkers() {
+// Tour-Marker hinzufügen (async um Bilder zu laden)
+async function addTourMarkers() {
     if (!tourData.elemente) return;
+
+    // Erst alle Bilder laden
+    const imagePromises = tourData.elemente.map(element =>
+        element.bild ? loadImageAsDataUrl(element.bild) : Promise.resolve(null)
+    );
+    const loadedImages = await Promise.all(imagePromises);
 
     tourData.elemente.forEach((element, index) => {
         const lonLat = new OpenLayers.LonLat(element.geolokation.lon, element.geolokation.lat)
@@ -226,10 +257,11 @@ function addTourMarkers() {
 
         const isVisited = visitedElements.has(element.id);
         const fillColor = isVisited ? '#27ae60' : '#C0775C';
+        const imageDataUrl = loadedImages[index];
 
         // Mit Bild wenn vorhanden, sonst nur Nummer
         let iconSvg;
-        if (element.bild) {
+        if (imageDataUrl) {
             iconSvg = `
                 <svg xmlns="http://www.w3.org/2000/svg" width="60" height="70">
                     <defs>
@@ -237,7 +269,7 @@ function addTourMarkers() {
                             <circle cx="30" cy="30" r="25"/>
                         </clipPath>
                     </defs>
-                    <image href="${element.bild}" x="5" y="5" width="50" height="50" clip-path="url(#clip-${index})" preserveAspectRatio="xMidYMid slice"/>
+                    <image href="${imageDataUrl}" x="5" y="5" width="50" height="50" clip-path="url(#clip-${index})" preserveAspectRatio="xMidYMid slice"/>
                     <circle cx="30" cy="30" r="25" fill="none" stroke="${fillColor}" stroke-width="3"/>
                     <circle cx="30" cy="60" r="10" fill="${fillColor}" stroke="white" stroke-width="2"/>
                     <text x="30" y="65" text-anchor="middle" fill="white" font-size="12" font-weight="bold">${index + 1}</text>
@@ -252,8 +284,8 @@ function addTourMarkers() {
             `;
         }
 
-        const size = element.bild ? new OpenLayers.Size(60, 70) : new OpenLayers.Size(30, 30);
-        const offset = element.bild ? new OpenLayers.Pixel(-30, -70) : new OpenLayers.Pixel(-15, -30);
+        const size = imageDataUrl ? new OpenLayers.Size(60, 70) : new OpenLayers.Size(30, 30);
+        const offset = imageDataUrl ? new OpenLayers.Pixel(-30, -70) : new OpenLayers.Pixel(-15, -30);
         const icon = new OpenLayers.Icon(
             'data:image/svg+xml;base64,' + btoa(iconSvg),
             size,
@@ -307,14 +339,14 @@ function checkProximity() {
 }
 
 // Element als besucht markieren
-function markElementAsVisited(element) {
+async function markElementAsVisited(element) {
     visitedElements.add(element.id);
     saveVisitedElements();
 
     // Marker neu zeichnen
     markersLayer.clearMarkers();
     updateUserMarker();
-    addTourMarkers();
+    await addTourMarkers();
 
     // Liste aktualisieren
     displayElements();
@@ -430,30 +462,27 @@ function displayElements() {
 }
 
 // Element manuell als besucht/unbesucht markieren
-window.toggleVisited = function(elementId) {
-    const element = tourData.elemente.find(e => e.id === elementId);
-    if (!element) return;
-
+window.toggleVisited = async function(elementId) {
     if (visitedElements.has(elementId)) {
         visitedElements.delete(elementId);
     } else {
-        markElementAsVisited(element);
+        visitedElements.add(elementId);
     }
     saveVisitedElements();
 
     // UI aktualisieren
     markersLayer.clearMarkers();
     updateUserMarker();
-    addTourMarkers();
+    await addTourMarkers();
     displayElements();
 }
 
 // Manueller Trigger für Station
-window.manualTrigger = function(elementId) {
+window.manualTrigger = async function(elementId) {
     const element = tourData.elemente.find(e => e.id === elementId);
     if (!element) return;
 
-    markElementAsVisited(element);
+    await markElementAsVisited(element);
     triggerElementLink(element, false);
 }
 
