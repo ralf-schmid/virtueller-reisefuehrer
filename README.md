@@ -254,69 +254,24 @@ Für Produktion wird empfohlen:
 
 ### ☁️ S3-Integration für persistente Speicherung
 
-Das `data/` Verzeichnis kann mit einem S3-Bucket verbunden werden für sichere, skalierbare Speicherung:
-
-#### Quick Start mit s3fs-fuse
+Das `data/` Verzeichnis sollte mit einem S3-Bucket oder einem persistenten Volume verbunden werden:
 
 ```bash
-# 1. S3-Bucket mounten (interaktiv)
-./setup-s3.sh
-
-# Oder mit Umgebungsvariablen:
-export S3_BUCKET="your-bucket-name"
-export AWS_ACCESS_KEY="your-access-key"
-export AWS_SECRET_KEY="your-secret-key"
-./setup-s3.sh
-
-# 2. Container mit S3-Backend starten
+# Container mit persistentem Volume starten
 docker-compose -f docker-compose.s3.yml up -d
-
-# 3. Zum Stoppen und Unmounten
-docker-compose -f docker-compose.s3.yml down
-./unmount-s3.sh
 ```
 
-#### Automatisches Mounten beim Boot (Systemd)
+**Hinweis:** Mounten Sie das `data/` Verzeichnis über Ihre Docker-Verwaltung mit einem S3-kompatiblen Volume.
 
-```bash
-# 1. Service-Datei anpassen
-sudo nano s3-mount.service
-# Pfade und Bucket-Name anpassen!
-
-# 2. Service installieren
-sudo cp s3-mount.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable s3-mount.service
-sudo systemctl start s3-mount.service
-
-# 3. Status prüfen
-sudo systemctl status s3-mount.service
-```
-
-#### Vorteile der S3-Integration
+#### Vorteile der persistenten Speicherung
 
 - ✅ **Persistent**: Daten überleben Container-Neustarts
 - ✅ **Skalierbar**: Unbegrenzter Speicherplatz
-- ✅ **Backup**: Automatische S3-Versionierung
+- ✅ **Backup**: Automatische Versionierung
 - ✅ **Multi-Region**: Daten verfügbar in mehreren Regionen
 - ✅ **Sicher**: Verschlüsselung at-rest und in-transit
 
-#### Troubleshooting
-
-```bash
-# S3-Mount prüfen
-df -h ./data
-mountpoint ./data
-
-# Logs prüfen
-tail -f /var/log/syslog | grep s3fs
-
-# Manuell unmounten
-fusermount -u ./data
-
-# Mit Debug-Modus mounten
-s3fs your-bucket ./data -o dbglevel=info -f
-```
+Siehe `S3-SETUP.md` für Details zur S3-Konfiguration.
 
 ## 🛠️ Entwicklung
 

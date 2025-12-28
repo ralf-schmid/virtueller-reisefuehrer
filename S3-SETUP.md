@@ -10,6 +10,8 @@ Diese Anleitung zeigt, wie Sie das `data/` Verzeichnis mit einem S3-Bucket verbi
 
 ## 🚀 Quick Start
 
+**Hinweis:** Mounten Sie das `data/` Verzeichnis über Ihre Docker-Verwaltung. Diese Anleitung dient als Referenz für die manuelle S3-Konfiguration.
+
 ### Schritt 1: S3-Bucket erstellen (falls noch nicht vorhanden)
 
 ```bash
@@ -46,139 +48,57 @@ aws s3 mb s3://virtueller-reisefuehrer-data --region eu-central-1
 }
 ```
 
-### Schritt 3: S3-Mount einrichten
+### Schritt 3: Volume in Docker-Verwaltung konfigurieren
 
-#### Option A: Interaktiv
-
-```bash
-./setup-s3.sh
-```
-
-Das Script fragt nach:
-- S3 Bucket Name
-- AWS Access Key ID
-- AWS Secret Access Key
-
-#### Option B: Mit Umgebungsvariablen
-
-```bash
-# Environment-Datei erstellen
-cp .env.s3.example .env.s3
-nano .env.s3  # Anpassen
-
-# Laden und mounten
-source .env.s3
-./setup-s3.sh
-```
+Konfigurieren Sie das `data/` Verzeichnis als persistentes Volume in Ihrer Docker-Verwaltung mit S3-Backend.
 
 ### Schritt 4: Anwendung starten
 
 ```bash
-# Mit S3-Backend
+# Mit S3-Backend (über Docker-Verwaltung konfiguriert)
 docker-compose -f docker-compose.s3.yml up -d
-
-# Oder normale docker-compose (data/ ist bereits gemountet)
-docker-compose up -d
 ```
 
 ### Schritt 5: Überprüfen
 
 ```bash
-# Mount-Status prüfen
-mountpoint ./data
-
-# Dateien anzeigen
-ls -la ./data/
+# Dateien im Container prüfen
+docker exec virtuelle-stadtfuehrungen ls -la /var/www/html/data/
 
 # S3-Bucket direkt prüfen
 aws s3 ls s3://virtueller-reisefuehrer-data/
 ```
 
-## 🔄 Automatisches Mounten beim Boot
+## 🔄 Volume-Konfiguration
 
-### Mit Systemd
-
-```bash
-# 1. Service-Datei anpassen
-sudo nano s3-mount.service
-
-# Ändern Sie:
-# - WorkingDirectory=/pfad/zu/virtueller-reisefuehrer
-# - Environment="S3_BUCKET=ihr-bucket-name"
-
-# 2. Service installieren
-sudo cp s3-mount.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable s3-mount.service
-sudo systemctl start s3-mount.service
-
-# 3. Status prüfen
-sudo systemctl status s3-mount.service
-```
-
-### Mit /etc/fstab
-
-```bash
-# Credentials-Datei erstellen (falls noch nicht vorhanden)
-echo "ACCESS_KEY:SECRET_KEY" > ~/.passwd-s3fs
-chmod 600 ~/.passwd-s3fs
-
-# Zu /etc/fstab hinzufügen:
-virtueller-reisefuehrer-data /pfad/zu/data fuse.s3fs _netdev,allow_other,use_cache=/tmp,passwd_file=/home/user/.passwd-s3fs 0 0
-```
+Die Volume-Konfiguration erfolgt über Ihre Docker-Verwaltung. Stellen Sie sicher, dass das `data/` Volume korrekt mit Ihrem S3-Backend verbunden ist.
 
 ## 🛠️ Troubleshooting
 
-### Problem: Mount schlägt fehl
+### Problem: Touren können nicht gespeichert werden
 
 ```bash
-# Debug-Modus aktivieren
-s3fs virtueller-reisefuehrer-data ./data \
-  -o passwd_file=$HOME/.passwd-s3fs \
-  -o dbglevel=info \
-  -f
+# Berechtigungen im Container prüfen
+docker exec virtuelle-stadtfuehrungen ls -la /var/www/html/data/
+docker exec virtuelle-stadtfuehrungen touch /var/www/html/data/test.txt
 
-# Häufige Ursachen:
-# - Falsche Credentials
-# - Bucket existiert nicht
-# - Keine Internetverbindung
-# - Bucket in anderer Region
+# Volume-Konfiguration prüfen
+docker inspect virtuelle-stadtfuehrungen | grep -A 10 Mounts
 ```
 
-### Problem: Berechtigung verweigert
+### Problem: Daten nicht persistent
 
 ```bash
-# S3FS mit richtigen Permissions mounten
-s3fs virtueller-reisefuehrer-data ./data \
-  -o passwd_file=$HOME/.passwd-s3fs \
-  -o uid=$(id -u www-data) \
-  -o gid=$(id -g www-data) \
-  -o allow_other
+# S3-Bucket prüfen
+aws s3 ls s3://virtueller-reisefuehrer-data/
+
+# Docker-Volume prüfen
+docker volume inspect <volume-name>
 ```
 
 ### Problem: Langsame Performance
 
-```bash
-# Cache aktivieren für bessere Performance
-s3fs virtueller-reisefuehrer-data ./data \
-  -o passwd_file=$HOME/.passwd-s3fs \
-  -o use_cache=/tmp/s3fs-cache \
-  -o cache_size_mb=1000 \
-  -o ensure_diskfree=500
-```
-
-### Problem: Kann nicht unmounten
-
-```bash
-# Prozesse prüfen, die data/ verwenden
-lsof +D ./data
-
-# Force unmount
-sudo umount -l ./data
-
-# Oder mit fusermount
-fusermount -uz ./data
-```
+Konfigurieren Sie Caching in Ihrer Docker-Verwaltung oder verwenden Sie S3-kompatible Caching-Optionen.
 
 ## 📊 Monitoring
 
