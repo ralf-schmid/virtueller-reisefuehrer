@@ -24,6 +24,8 @@ logs/
 .env
 .env.local
 .env.*.local
+.env.s3
+.passwd-s3fs
 
 # OS
 Thumbs.db
