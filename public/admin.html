@@ -14,6 +14,7 @@
                 <ul>
                     <li><a href="index.html">Touren</a></li>
                     <li><a href="admin.html" class="active">Verwaltung</a></li>
+                    <li><a href="#" onclick="logout(); return false;">Abmelden</a></li>
                 </ul>
             </nav>
         </div>
@@ -123,6 +124,32 @@
         }
     </style>
 
+    <script>
+        // Authentifizierung prüfen
+        (async function checkAuth() {
+            try {
+                const response = await fetch('/api/check_auth.php');
+                const result = await response.json();
+
+                if (!result.authenticated) {
+                    window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.pathname);
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.pathname);
+            }
+        })();
+
+        // Logout-Funktion
+        async function logout() {
+            try {
+                await fetch('/api/logout.php');
+                window.location.href = '/login.html';
+            } catch (error) {
+                console.error('Logout failed:', error);
+            }
+        }
+    </script>
     <script src="js/admin.js"></script>
 </body>
 </html>
