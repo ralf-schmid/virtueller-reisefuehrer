@@ -591,7 +591,7 @@ function displayElements() {
         }
 
         const imageHtml = element.bild ?
-            `<img src="${escapeHtml(element.bild)}" alt="${escapeHtml(element.name)}" class="element-image">` :
+            `<img src="${escapeHtml(element.bild)}" alt="${escapeHtml(element.name)}" class="element-image" width="800" height="600" loading="lazy">` :
             '';
 
         elementDiv.innerHTML = `
@@ -774,7 +774,8 @@ function escapeHtml(text) {
 }
 
 // Aufräumen beim Verlassen der Seite
-window.addEventListener('beforeunload', () => {
+// Verwende 'pagehide' statt 'beforeunload' (moderne Best Practice)
+window.addEventListener('pagehide', () => {
     if (watchId !== null) {
         navigator.geolocation.clearWatch(watchId);
     }

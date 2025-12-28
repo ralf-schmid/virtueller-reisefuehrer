@@ -61,7 +61,7 @@ function createTourCard(tour) {
     const elementCount = tour.elemente ? tour.elemente.length : 0;
 
     card.innerHTML = `
-        ${tour.bild ? `<img src="${escapeHtml(tour.bild)}" alt="${escapeHtml(tour.name)}" onerror="this.src='https://via.placeholder.com/400x300/2C3E50/FFFFFF?text=Kein+Bild'">` : ''}
+        ${tour.bild ? `<img src="${escapeHtml(tour.bild)}" alt="${escapeHtml(tour.name)}" width="400" height="300" onerror="this.src='https://via.placeholder.com/400x300/2C3E50/FFFFFF?text=Kein+Bild'" fetchpriority="high">` : ''}
         <h2>${escapeHtml(tour.name)}</h2>
         <p>${escapeHtml(tour.beschreibung)}</p>
         <p class="text-center" style="color: #666; font-size: 0.9rem;">
