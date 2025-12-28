@@ -72,13 +72,29 @@ jobs:
           docker run -d --name test-container -p 8080:80 $(echo "${{ steps.meta.outputs.tags }}" | head -n1)
 
           # Kurz warten bis Apache gestartet ist
-          sleep 5
+          sleep 10
 
           # Testen ob die Hauptseite erreichbar ist
+          echo "=== Testing index page ==="
           curl -f http://localhost:8080/ || exit 1
 
           # Testen ob die API erreichbar ist
-          curl -f http://localhost:8080/api/tours.php || exit 1
+          echo "=== Testing API endpoint ==="
+          HTTP_CODE=$(curl -s -o /tmp/api_response.txt -w "%{http_code}" http://localhost:8080/api/tours.php)
+          echo "HTTP Status Code: $HTTP_CODE"
+          echo "Response:"
+          cat /tmp/api_response.txt
+
+          # Logs ausgeben bei Fehler
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "=== Container Logs ==="
+            docker logs test-container
+            echo "=== Apache Error Log ==="
+            docker exec test-container cat /var/log/apache2/error.log || true
+            echo "=== PHP Error Log ==="
+            docker exec test-container cat /var/log/php_errors.log || true
+            exit 1
+          fi
 
           # Container stoppen
           docker stop test-container
