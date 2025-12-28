@@ -31,9 +31,32 @@ RUN echo '<Directory /var/www/html/>\n\
 </Directory>' > /etc/apache2/conf-available/docker-php.conf \
     && a2enconf docker-php
 
+# PHP Handler für Apache konfigurieren
+RUN a2enmod php8.2 || echo "PHP module already enabled" \
+    && echo "<FilesMatch \\.php$>\n    SetHandler application/x-httpd-php\n</FilesMatch>" > /etc/apache2/conf-available/php-handler.conf \
+    && a2enconf php-handler
+
+# VirtualHost für korrekte PHP-Verarbeitung konfigurieren
+RUN echo '<VirtualHost *:80>\n\
+    DocumentRoot /var/www/html\n\
+    DirectoryIndex index.html index.php\n\
+    \n\
+    <Directory /var/www/html>\n\
+        Options -Indexes +FollowSymLinks\n\
+        AllowOverride All\n\
+        Require all granted\n\
+    </Directory>\n\
+    \n\
+    <FilesMatch \\.php$>\n\
+        SetHandler application/x-httpd-php\n\
+    </FilesMatch>\n\
+    \n\
+    ErrorLog /var/log/apache2/error.log\n\
+    CustomLog /var/log/apache2/access.log combined\n\
+</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
+
 # Apache Logging in Dateien konfigurieren (nicht stdout/stderr)
-RUN sed -i 's#ErrorLog.*#ErrorLog /var/log/apache2/error.log#g' /etc/apache2/apache2.conf \
-    && sed -i 's#CustomLog.*#CustomLog /var/log/apache2/access.log combined#g' /etc/apache2/sites-available/000-default.conf
+RUN sed -i 's#ErrorLog.*#ErrorLog /var/log/apache2/error.log#g' /etc/apache2/apache2.conf
 
 # Log-Verzeichnisse erstellen und Berechtigungen setzen
 RUN mkdir -p /var/log/apache2 \

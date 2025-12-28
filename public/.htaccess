@@ -1,0 +1,15 @@
+# Apache .htaccess für PHP-Verarbeitung
+
+# PHP-Dateien aktivieren
+<FilesMatch \.php$>
+    SetHandler application/x-httpd-php
+</FilesMatch>
+
+# Rewrite Engine aktivieren
+RewriteEngine On
+
+# Sicherstellen dass PHP ausgeführt wird
+AddType application/x-httpd-php .php
+
+# Index-Dateien
+DirectoryIndex index.html index.php

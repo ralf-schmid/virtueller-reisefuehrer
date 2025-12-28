@@ -1,0 +1,14 @@
+# Apache .htaccess für API
+
+# PHP-Dateien aktivieren
+<FilesMatch \.php$>
+    SetHandler application/x-httpd-php
+</FilesMatch>
+
+# PHP ausführen
+AddType application/x-httpd-php .php
+
+# CORS Headers (werden auch in config.php gesetzt, aber als Backup)
+Header set Access-Control-Allow-Origin "*"
+Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+Header set Access-Control-Allow-Headers "Content-Type, Authorization"
