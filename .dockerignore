@@ -1,0 +1,30 @@
+# Git-Dateien
+.git
+.gitignore
+.github
+
+# Docker-Dateien
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# Dokumentation
+README.md
+LICENSE
+
+# Node-Module (falls vorhanden)
+node_modules
+npm-debug.log
+
+# IDE-Konfiguration
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Temporäre Dateien
+*.tmp
+*.log
+.DS_Store
+Thumbs.db

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Virtuelle Stadtführungen mit Geolokation - Entdecken Sie Ihre Stadt auf neue Art">
+    <title>Virtuelle Stadtführungen</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>📍 Virtuelle Stadtführungen</h1>
+            <nav>
+                <ul>
+                    <li><a href="index.html" class="active">Touren</a></li>
+                    <li><a href="admin.html">Verwaltung</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="card text-center">
+                <h2>Willkommen zu den virtuellen Stadtführungen!</h2>
+                <p>Entdecken Sie Ihre Stadt auf eine neue, interaktive Art. Wählen Sie eine Tour aus und lassen Sie sich von Ihrer Position zu den interessantesten Orten führen.</p>
+            </div>
+
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Touren werden geladen...</p>
+            </div>
+
+            <div id="error-message" class="alert alert-danger hidden"></div>
+
+            <div id="tours-container" class="tours-grid">
+                <!-- Touren werden hier dynamisch eingefügt -->
+            </div>
+
+            <div id="no-tours" class="card text-center hidden">
+                <h2>Keine Touren verfügbar</h2>
+                <p>Es wurden noch keine virtuellen Stadtführungen erstellt.</p>
+                <a href="admin.html" class="btn btn-primary mt-2">Jetzt eine Tour erstellen</a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Virtuelle Stadtführungen | Entwickelt mit ❤️ für mobile Geräte</p>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
