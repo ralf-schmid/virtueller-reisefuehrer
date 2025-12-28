@@ -192,6 +192,55 @@ main {
     background-color: #a0311f;
 }
 
+.btn-speak {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: var(--transition);
+}
+
+.btn-speak:hover {
+    background-color: #1a252f;
+    transform: scale(1.02);
+}
+
+.btn-speak .speak-icon {
+    font-size: 1.2rem;
+    display: inline-block;
+}
+
+.btn-speak.speaking {
+    background-color: var(--color-accent);
+    animation: pulse-speak 2s infinite;
+}
+
+.btn-speak.speaking:hover {
+    background-color: #d43438;
+}
+
+.btn-speak.paused {
+    background-color: var(--color-success);
+}
+
+.btn-speak.paused:hover {
+    background-color: #3d6548;
+}
+
+@keyframes pulse-speak {
+    0%, 100% {
+        opacity: 1;
+        box-shadow: 0 0 0 0 rgba(239, 59, 64, 0.7);
+    }
+    50% {
+        opacity: 0.9;
+        box-shadow: 0 0 0 8px rgba(239, 59, 64, 0);
+    }
+}
+
 .btn-block {
     display: block;
     width: 100%;
