@@ -1,0 +1,32 @@
+# Docker Compose Konfiguration mit S3-Mount
+# Verwendung: docker-compose -f docker-compose.s3.yml up -d
+
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: virtuelle-stadtfuehrungen
+    ports:
+      - "8080:80"
+    volumes:
+      # WICHTIG: Das data/ Verzeichnis muss VOR dem Docker-Start
+      # mit s3fs gemountet werden (siehe setup-s3.sh)
+      - ./data:/var/www/html/data:rw
+    environment:
+      - APACHE_RUN_USER=www-data
+      - APACHE_RUN_GROUP=www-data
+    restart: unless-stopped
+    networks:
+      - city-tours-network
+
+networks:
+  city-tours-network:
+    driver: bridge
+
+# Anleitung:
+# 1. S3-Bucket mounten: ./setup-s3.sh
+# 2. Container starten: docker-compose -f docker-compose.s3.yml up -d
+# 3. Zum Stoppen: docker-compose -f docker-compose.s3.yml down && ./unmount-s3.sh
