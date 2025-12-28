@@ -5,6 +5,7 @@ error_reporting(E_ALL);
 ini_set('log_errors', 1);
 
 require_once 'config.php';
+require_once 'auth.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 $requestUri = $_SERVER['REQUEST_URI'];
@@ -39,6 +40,8 @@ if ($method === 'GET' && isset($_GET['id'])) {
 
 // Route: POST /api/tours.php - Neue Tour erstellen
 if ($method === 'POST') {
+    requireApiAuth();
+
     if (!$input || !isset($input['name']) || !isset($input['beschreibung'])) {
         sendError('Name und Beschreibung sind erforderlich');
     }
@@ -73,6 +76,8 @@ if ($method === 'POST') {
 
 // Route: PUT /api/tours.php?id=xyz - Tour aktualisieren
 if ($method === 'PUT' && isset($_GET['id'])) {
+    requireApiAuth();
+
     if (!$input) {
         sendError('Keine Daten zum Aktualisieren bereitgestellt');
     }
@@ -116,6 +121,8 @@ if ($method === 'PUT' && isset($_GET['id'])) {
 
 // Route: DELETE /api/tours.php?id=xyz - Tour löschen
 if ($method === 'DELETE' && isset($_GET['id'])) {
+    requireApiAuth();
+
     $tours = loadToursData();
     $tourId = $_GET['id'];
     $initialCount = count($tours);

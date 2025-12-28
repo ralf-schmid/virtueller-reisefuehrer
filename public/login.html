@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Virtuelle Stadtführungen</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .login-container {
+            max-width: 400px;
+            margin: 4rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .login-form label {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .login-form input[type="password"] {
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .login-form button {
+            padding: 0.75rem;
+            background: linear-gradient(135deg, #C0775C 0%, #a86549 100%);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .login-form button:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Virtuelle Stadtführungen</h1>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Zur Übersicht</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="login-container">
+                <h2>Admin-Login</h2>
+                <div id="error-message" class="alert alert-danger hidden"></div>
+                <form class="login-form" id="login-form">
+                    <div>
+                        <label for="password">Passwort:</label>
+                        <input type="password" id="password" name="password" required autofocus>
+                    </div>
+                    <button type="submit">Anmelden</button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Virtuelle Stadtführungen</p>
+        </div>
+    </footer>
+
+    <script>
+        const form = document.getElementById('login-form');
+        const errorMessage = document.getElementById('error-message');
+        const passwordInput = document.getElementById('password');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const password = passwordInput.value;
+
+            try {
+                const response = await fetch('/api/login.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ password })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    // Redirect zur ursprünglichen Seite oder Admin
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const redirect = urlParams.get('redirect') || '/admin.html';
+                    window.location.href = redirect;
+                } else {
+                    errorMessage.textContent = result.error || 'Falsches Passwort';
+                    errorMessage.classList.remove('hidden');
+                    passwordInput.value = '';
+                    passwordInput.focus();
+                }
+            } catch (error) {
+                errorMessage.textContent = 'Fehler beim Login. Bitte versuchen Sie es erneut.';
+                errorMessage.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

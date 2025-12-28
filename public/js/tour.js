@@ -12,6 +12,35 @@ let tourData = null;
 let watchId = null;
 let visitedElements = new Set();
 
+// LocalStorage für besuchte Elemente
+function loadVisitedElements() {
+    const saved = localStorage.getItem(`visited_${tourId}`);
+    if (saved) {
+        visitedElements = new Set(JSON.parse(saved));
+    }
+}
+
+function saveVisitedElements() {
+    localStorage.setItem(`visited_${tourId}`, JSON.stringify([...visitedElements]));
+}
+
+// Push-Benachrichtigungen aktivieren
+function requestNotificationPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+}
+
+function showNotification(title, body) {
+    if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(title, {
+            body: body,
+            icon: '/favicon.ico',
+            badge: '/favicon.ico'
+        });
+    }
+}
+
 // DOM-Elemente
 const loadingElement = document.getElementById('loading');
 const errorMessage = document.getElementById('error-message');
@@ -33,6 +62,12 @@ document.addEventListener('DOMContentLoaded', () => {
         showError('Keine Tour-ID angegeben!');
         return;
     }
+
+    // Besuchte Elemente aus LocalStorage laden
+    loadVisitedElements();
+
+    // Push-Benachrichtigungen anfragen
+    requestNotificationPermission();
 
     loadTour();
 });
@@ -189,16 +224,38 @@ function addTourMarkers() {
                 map.getProjectionObject()
             );
 
-        // Nummer als Marker-Icon
-        const size = new OpenLayers.Size(30, 30);
-        const offset = new OpenLayers.Pixel(-(size.w / 2), -size.h);
-        const icon = new OpenLayers.Icon(
-            'data:image/svg+xml;base64,' + btoa(`
+        const isVisited = visitedElements.has(element.id);
+        const fillColor = isVisited ? '#27ae60' : '#C0775C';
+
+        // Mit Bild wenn vorhanden, sonst nur Nummer
+        let iconSvg;
+        if (element.bild) {
+            iconSvg = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="60" height="70">
+                    <defs>
+                        <clipPath id="clip-${index}">
+                            <circle cx="30" cy="30" r="25"/>
+                        </clipPath>
+                    </defs>
+                    <image href="${element.bild}" x="5" y="5" width="50" height="50" clip-path="url(#clip-${index})" preserveAspectRatio="xMidYMid slice"/>
+                    <circle cx="30" cy="30" r="25" fill="none" stroke="${fillColor}" stroke-width="3"/>
+                    <circle cx="30" cy="60" r="10" fill="${fillColor}" stroke="white" stroke-width="2"/>
+                    <text x="30" y="65" text-anchor="middle" fill="white" font-size="12" font-weight="bold">${index + 1}</text>
+                </svg>
+            `;
+        } else {
+            iconSvg = `
                 <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30">
-                    <circle cx="15" cy="15" r="12" fill="#C0775C" stroke="white" stroke-width="2"/>
+                    <circle cx="15" cy="15" r="12" fill="${fillColor}" stroke="white" stroke-width="2"/>
                     <text x="15" y="20" text-anchor="middle" fill="white" font-size="14" font-weight="bold">${index + 1}</text>
                 </svg>
-            `),
+            `;
+        }
+
+        const size = element.bild ? new OpenLayers.Size(60, 70) : new OpenLayers.Size(30, 30);
+        const offset = element.bild ? new OpenLayers.Pixel(-30, -70) : new OpenLayers.Pixel(-15, -30);
+        const icon = new OpenLayers.Icon(
+            'data:image/svg+xml;base64,' + btoa(iconSvg),
             size,
             offset
         );
@@ -219,7 +276,7 @@ function updatePosition(position) {
     checkProximity();
 }
 
-// Nähe zu Elementen prüfen (10m-Regel)
+// Nähe zu Elementen prüfen (10m automatisch, < 200m mit Button)
 function checkProximity() {
     if (!tourData.elemente || !currentPosition) return;
 
@@ -234,23 +291,55 @@ function checkProximity() {
         // Distanz in Liste aktualisieren
         updateElementDistance(element.id, distance);
 
-        // Wenn innerhalb von 10 Metern und noch nicht besucht
+        // Wenn innerhalb von 10 Metern und noch nicht besucht - automatisch
         if (distance <= 10 && !visitedElements.has(element.id)) {
-            visitedElements.add(element.id);
-            triggerElementLink(element);
+            markElementAsVisited(element);
+            triggerElementLink(element, true);
+        }
+        // Wenn zwischen 10m und 200m - Benachrichtigung senden
+        else if (distance > 10 && distance <= 200 && !visitedElements.has(element.id)) {
+            const button = document.getElementById(`manual-trigger-${element.id}`);
+            if (button && button.classList.contains('hidden')) {
+                showNotification(`${element.name} in der Nähe!`, `Sie sind ${Math.round(distance)} m entfernt. Tippen Sie auf den Button um mehr zu erfahren.`);
+            }
         }
     });
 }
 
-// Element-Link auslösen (automatisch öffnen)
-function triggerElementLink(element) {
+// Element als besucht markieren
+function markElementAsVisited(element) {
+    visitedElements.add(element.id);
+    saveVisitedElements();
+
+    // Marker neu zeichnen
+    markersLayer.clearMarkers();
+    updateUserMarker();
+    addTourMarkers();
+
+    // Liste aktualisieren
+    displayElements();
+}
+
+// Element-Link auslösen (automatisch oder manuell)
+function triggerElementLink(element, isAutomatic = false) {
     // Visuelles Feedback
-    updateStatusBar(`📍 Sie haben "${element.name}" erreicht!`, true);
+    const message = isAutomatic ?
+        `📍 Sie haben "${element.name}" erreicht!` :
+        `📍 "${element.name}" - Viel Spaß beim Erkunden!`;
+    updateStatusBar(message, true);
+
+    // Push-Benachrichtigung bei automatischem Trigger
+    if (isAutomatic) {
+        showNotification(`Station erreicht!`, `Sie sind bei "${element.name}" angekommen!`);
+    }
 
     // Link öffnen
     if (element.link) {
         // Bestätigung anzeigen
-        if (confirm(`Sie sind bei "${element.name}" angekommen!\n\nMöchten Sie mehr erfahren?`)) {
+        const confirmMessage = isAutomatic ?
+            `Sie sind bei "${element.name}" angekommen!\n\nMöchten Sie mehr erfahren?` :
+            `"${element.name}"\n\nMöchten Sie mehr erfahren?`;
+        if (confirm(confirmMessage)) {
             window.open(element.link, '_blank');
         }
     }
@@ -281,35 +370,99 @@ function displayElements() {
 
     tourData.elemente.forEach((element, index) => {
         const elementDiv = document.createElement('div');
-        elementDiv.className = 'element-marker';
+        const isVisited = visitedElements.has(element.id);
+        elementDiv.className = isVisited ? 'element-marker visited' : 'element-marker';
         elementDiv.id = `element-${element.id}`;
 
         let distance = '';
+        let dist = 0;
+        let showManualButton = false;
         if (currentPosition) {
-            const dist = calculateDistance(
+            dist = calculateDistance(
                 currentPosition.lat,
                 currentPosition.lon,
                 element.geolokation.lat,
                 element.geolokation.lon
             );
             distance = formatDistance(dist);
+            showManualButton = dist > 10 && dist <= 200 && !isVisited;
         }
 
+        const imageHtml = element.bild ?
+            `<img src="${escapeHtml(element.bild)}" alt="${escapeHtml(element.name)}" class="element-image">` :
+            '';
+
+        const checkboxHtml = `
+            <label class="checkbox-label">
+                <input type="checkbox"
+                    id="checkbox-${element.id}"
+                    ${isVisited ? 'checked' : ''}
+                    onchange="toggleVisited('${element.id}')">
+                <span>Als besucht markieren</span>
+            </label>
+        `;
+
+        const manualButtonHtml = showManualButton ?
+            `<button class="btn btn-primary" id="manual-trigger-${element.id}"
+                onclick="manualTrigger('${element.id}')">
+                📍 Mehr erfahren (${Math.round(dist)} m entfernt)
+            </button>` :
+            `<button class="btn btn-primary hidden" id="manual-trigger-${element.id}"></button>`;
+
         elementDiv.innerHTML = `
-            <h4>${index + 1}. ${escapeHtml(element.name)}</h4>
-            <p><strong>${escapeHtml(element.titel)}</strong></p>
-            <p>${escapeHtml(element.beschreibung)}</p>
-            <span class="distance-badge" id="distance-${element.id}">${distance}</span>
+            <div class="element-content">
+                ${imageHtml}
+                <div class="element-text">
+                    <h4>${index + 1}. ${escapeHtml(element.name)}</h4>
+                    ${element.titel ? `<p><strong>${escapeHtml(element.titel)}</strong></p>` : ''}
+                    <p>${escapeHtml(element.beschreibung)}</p>
+                    <span class="distance-badge" id="distance-${element.id}">${distance}</span>
+                    <div class="element-actions">
+                        ${checkboxHtml}
+                        ${manualButtonHtml}
+                    </div>
+                </div>
+            </div>
         `;
 
         elementsContainer.appendChild(elementDiv);
     });
 }
 
+// Element manuell als besucht/unbesucht markieren
+window.toggleVisited = function(elementId) {
+    const element = tourData.elemente.find(e => e.id === elementId);
+    if (!element) return;
+
+    if (visitedElements.has(elementId)) {
+        visitedElements.delete(elementId);
+    } else {
+        markElementAsVisited(element);
+    }
+    saveVisitedElements();
+
+    // UI aktualisieren
+    markersLayer.clearMarkers();
+    updateUserMarker();
+    addTourMarkers();
+    displayElements();
+}
+
+// Manueller Trigger für Station
+window.manualTrigger = function(elementId) {
+    const element = tourData.elemente.find(e => e.id === elementId);
+    if (!element) return;
+
+    markElementAsVisited(element);
+    triggerElementLink(element, false);
+}
+
 // Distanz eines Elements aktualisieren
 function updateElementDistance(elementId, distance) {
     const badge = document.getElementById(`distance-${elementId}`);
     const elementDiv = document.getElementById(`element-${elementId}`);
+    const manualButton = document.getElementById(`manual-trigger-${elementId}`);
+    const isVisited = visitedElements.has(elementId);
 
     if (badge) {
         badge.textContent = formatDistance(distance);
@@ -317,7 +470,7 @@ function updateElementDistance(elementId, distance) {
         // Klasse basierend auf Distanz setzen
         badge.className = 'distance-badge';
         if (elementDiv) {
-            elementDiv.className = 'element-marker';
+            elementDiv.className = isVisited ? 'element-marker visited' : 'element-marker';
         }
 
         if (distance <= 10) {
@@ -327,6 +480,17 @@ function updateElementDistance(elementId, distance) {
             badge.classList.add('near');
         } else {
             badge.classList.add('far');
+        }
+    }
+
+    // Manuellen Button ein/ausblenden
+    if (manualButton) {
+        const showButton = distance > 10 && distance <= 200 && !isVisited;
+        if (showButton) {
+            manualButton.classList.remove('hidden');
+            manualButton.textContent = `📍 Mehr erfahren (${Math.round(distance)} m entfernt)`;
+        } else {
+            manualButton.classList.add('hidden');
         }
     }
 }
