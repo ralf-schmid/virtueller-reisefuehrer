@@ -21,7 +21,7 @@ DirectoryIndex index.html index.php
 <IfModule mod_headers.c>
     # Content Security Policy (CSP)
     # Erlaubt: Eigene Ressourcen, PayPal, OpenLayers, externe Bilder via Proxy
-    Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.paypalobjects.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https: http:; font-src 'self' data:; connect-src 'self' https://nominatim.openstreetmap.org; frame-src 'self' https://www.paypal.com; object-src 'none'; base-uri 'self'; form-action 'self';"
+    Header set Content-Security-Policy "default-src 'self'; script-src 'self' https://www.paypalobjects.com https://cdn.jsdelivr.net; style-src 'self' https://cdn.jsdelivr.net; img-src 'self' data: https: http:; font-src 'self' data:; connect-src 'self' https://nominatim.openstreetmap.org; frame-src 'self' https://www.paypal.com; object-src 'none'; base-uri 'self'; form-action 'self';"
 
     # HTTP Strict Transport Security (HSTS)
     # Erzwingt HTTPS für 1 Jahr
@@ -45,7 +45,7 @@ DirectoryIndex index.html index.php
 
     # Permissions-Policy (früher Feature-Policy)
     # Deaktiviert unnötige Browser-Features
-    Header set Permissions-Policy "geolocation=(self), microphone=(), camera=(), payment=(self 'https://www.paypal.com')"
+    Header set Permissions-Policy "geolocation=self, microphone=(), camera=(), payment=*"
 </IfModule>
 
 # ========================================

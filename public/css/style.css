@@ -192,7 +192,7 @@ main {
     background-color: #a0311f;
 }
 
-.btn-speak {
+.btn-audio {
     background-color: var(--color-primary);
     color: var(--color-white);
     position: relative;
@@ -203,34 +203,34 @@ main {
     transition: var(--transition);
 }
 
-.btn-speak:hover {
+.btn-audio:hover {
     background-color: #1a252f;
     transform: scale(1.02);
 }
 
-.btn-speak .speak-icon {
+.btn-audio .audio-icon {
     font-size: 1.2rem;
     display: inline-block;
 }
 
-.btn-speak.speaking {
+.btn-audio.playing {
     background-color: var(--color-accent);
-    animation: pulse-speak 2s infinite;
+    animation: pulse-audio 2s infinite;
 }
 
-.btn-speak.speaking:hover {
+.btn-audio.playing:hover {
     background-color: #d43438;
 }
 
-.btn-speak.paused {
+.btn-audio.paused {
     background-color: var(--color-success);
 }
 
-.btn-speak.paused:hover {
+.btn-audio.paused:hover {
     background-color: #3d6548;
 }
 
-@keyframes pulse-speak {
+@keyframes pulse-audio {
     0%, 100% {
         opacity: 1;
         box-shadow: 0 0 0 0 rgba(239, 59, 64, 0.7);

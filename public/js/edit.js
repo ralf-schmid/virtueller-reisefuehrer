@@ -116,6 +116,19 @@ function addElement(elementData = null) {
         </div>
 
         <div class="form-group">
+            <label>Audio-Datei (MP3)</label>
+            <input type="file" class="element-audio-file" data-id="${elementId}" accept="audio/mp3,audio/mpeg">
+            <small style="color: #666;">
+                ${elementData && elementData.audio ? `
+                    Aktuelle Datei: <a href="${escapeHtml(elementData.audio)}" target="_blank">Abspielen</a> |
+                    <span id="audio-upload-status-${elementId}"></span>
+                ` : 'MP3-Datei hochladen für Audiowiedergabe'}
+            </small>
+            <input type="hidden" class="element-audio" data-id="${elementId}"
+                   value="${elementData ? escapeHtml(elementData.audio || '') : ''}">
+        </div>
+
+        <div class="form-group">
             <label>Link / URL</label>
             <input type="url" class="element-link" data-id="${elementId}"
                    value="${elementData ? escapeHtml(elementData.link || '') : ''}"
@@ -152,6 +165,14 @@ function addElement(elementData = null) {
 
     elementsContainer.appendChild(elementCard);
     noElementsDiv.classList.add('hidden');
+
+    // Event-Listener für Audio-Upload hinzufügen
+    const audioFileInput = elementCard.querySelector('.element-audio-file');
+    if (audioFileInput) {
+        audioFileInput.addEventListener('change', async (e) => {
+            await handleAudioUpload(e.target, elementId);
+        });
+    }
 
     updateElementNumbers();
 }
@@ -205,6 +226,7 @@ async function saveTour(event) {
             titel: card.querySelector('.element-titel').value.trim(),
             beschreibung: card.querySelector('.element-beschreibung').value.trim(),
             bild: card.querySelector('.element-bild').value.trim(),
+            audio: card.querySelector('.element-audio').value.trim(),
             link: card.querySelector('.element-link').value.trim(),
             geolokation: {
                 lat: parseFloat(card.querySelector('.element-lat').value),
@@ -270,6 +292,73 @@ async function saveTour(event) {
         console.error('Fehler beim Speichern der Tour:', error);
         showLoading(false);
         showError('Fehler beim Speichern der Tour. Bitte versuchen Sie es später erneut.');
+    }
+}
+
+// Audio-Upload behandeln
+async function handleAudioUpload(fileInput, elementId) {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    // Validierung: nur MP3
+    if (!file.type.match('audio/(mpeg|mp3)')) {
+        alert('Bitte nur MP3-Dateien hochladen!');
+        fileInput.value = '';
+        return;
+    }
+
+    // Validierung: max 10 MB
+    if (file.size > 10 * 1024 * 1024) {
+        alert('Die Audio-Datei darf maximal 10 MB groß sein!');
+        fileInput.value = '';
+        return;
+    }
+
+    const statusSpan = document.getElementById(`audio-upload-status-${elementId}`);
+    if (statusSpan) {
+        statusSpan.textContent = 'Uploading...';
+        statusSpan.style.color = '#666';
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('audio', file);
+        formData.append('elementId', elementId);
+
+        const response = await fetch('/api/upload_audio.php', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const result = await response.json();
+
+        if (result.success) {
+            // Speichere den Pfad im hidden input
+            const audioInput = document.querySelector(`.element-audio[data-id="${elementId}"]`);
+            if (audioInput) {
+                audioInput.value = result.path;
+            }
+
+            if (statusSpan) {
+                statusSpan.innerHTML = `✅ <a href="${result.path}" target="_blank">Hochgeladen</a>`;
+                statusSpan.style.color = 'green';
+            }
+        } else {
+            throw new Error(result.error || 'Upload fehlgeschlagen');
+        }
+    } catch (error) {
+        console.error('Audio-Upload Fehler:', error);
+        alert('Fehler beim Hochladen der Audio-Datei: ' + error.message);
+        fileInput.value = '';
+
+        if (statusSpan) {
+            statusSpan.textContent = '❌ Fehler';
+            statusSpan.style.color = 'red';
+        }
     }
 }
 
