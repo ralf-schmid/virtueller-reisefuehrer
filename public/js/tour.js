@@ -19,7 +19,14 @@ async function loadImageAsDataUrl(url) {
     if (imageDataUrls.has(url)) return imageDataUrls.get(url);
 
     try {
-        const response = await fetch(url);
+        // Verwende Image-Proxy für externe URLs
+        const proxyUrl = `/api/image_proxy.php?url=${encodeURIComponent(url)}`;
+        const response = await fetch(proxyUrl);
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
         const blob = await response.blob();
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
