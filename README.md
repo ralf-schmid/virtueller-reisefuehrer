@@ -249,8 +249,29 @@ Für Produktion wird empfohlen:
 
 1. HTTPS-Zertifikat einrichten (Let's Encrypt)
 2. Reverse Proxy (nginx) vor Apache
-3. Backup der `data/tours.json` einrichten
+3. Backup der `data/tours.json` einrichten (oder S3-Integration)
 4. Resource-Limits setzen
+
+### ☁️ S3-Integration für persistente Speicherung
+
+Das `data/` Verzeichnis sollte mit einem S3-Bucket oder einem persistenten Volume verbunden werden:
+
+```bash
+# Container mit persistentem Volume starten
+docker-compose -f docker-compose.s3.yml up -d
+```
+
+**Hinweis:** Mounten Sie das `data/` Verzeichnis über Ihre Docker-Verwaltung mit einem S3-kompatiblen Volume.
+
+#### Vorteile der persistenten Speicherung
+
+- ✅ **Persistent**: Daten überleben Container-Neustarts
+- ✅ **Skalierbar**: Unbegrenzter Speicherplatz
+- ✅ **Backup**: Automatische Versionierung
+- ✅ **Multi-Region**: Daten verfügbar in mehreren Regionen
+- ✅ **Sicher**: Verschlüsselung at-rest und in-transit
+
+Siehe `S3-SETUP.md` für Details zur S3-Konfiguration.
 
 ## 🛠️ Entwicklung
 
