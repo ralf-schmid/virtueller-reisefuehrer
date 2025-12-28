@@ -17,11 +17,14 @@ RUN apt-get update && apt-get install -y \
 # Apache mod_rewrite aktivieren
 RUN a2enmod rewrite
 
-# PHP Error Logging konfigurieren
-RUN echo "log_errors = On" >> /usr/local/etc/php/conf.d/error-logging.ini \
-    && echo "error_log = /var/log/php_errors.log" >> /usr/local/etc/php/conf.d/error-logging.ini \
-    && echo "display_errors = Off" >> /usr/local/etc/php/conf.d/error-logging.ini \
-    && echo "display_startup_errors = Off" >> /usr/local/etc/php/conf.d/error-logging.ini
+# PHP Konfiguration
+RUN { \
+        echo "log_errors = On"; \
+        echo "error_log = /var/log/php_errors.log"; \
+        echo "display_errors = On"; \
+        echo "display_startup_errors = On"; \
+        echo "error_reporting = E_ALL"; \
+    } > /usr/local/etc/php/conf.d/error-logging.ini
 
 # Apache-Konfiguration: AllowOverride für .htaccess aktivieren
 RUN echo '<Directory /var/www/html/>\n\
@@ -50,10 +53,16 @@ COPY public/ /var/www/html/
 COPY api/ /var/www/html/api/
 COPY data/ /var/www/html/data/
 
+# tours.json initial erstellen falls nicht vorhanden
+RUN if [ ! -f /var/www/html/data/tours.json ]; then \
+        echo "[]" > /var/www/html/data/tours.json; \
+    fi
+
 # Berechtigungen setzen
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html \
-    && chmod -R 777 /var/www/html/data
+    && chmod -R 777 /var/www/html/data \
+    && chmod 666 /var/www/html/data/tours.json
 
 # Port 80 freigeben
 EXPOSE 80
