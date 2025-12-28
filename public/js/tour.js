@@ -242,58 +242,95 @@ function updateUserMarker() {
 async function addTourMarkers() {
     if (!tourData.elemente) return;
 
-    // Erst alle Bilder laden
-    const imagePromises = tourData.elemente.map(element =>
-        element.bild ? loadImageAsDataUrl(element.bild) : Promise.resolve(null)
-    );
+    // Erst alle Bilder laden (mit Fehlerbehandlung)
+    const imagePromises = tourData.elemente.map(async (element) => {
+        if (!element.bild) return null;
+        try {
+            const dataUrl = await loadImageAsDataUrl(element.bild);
+            return dataUrl;
+        } catch (error) {
+            console.warn('Fehler beim Laden des Bildes für', element.name, error);
+            return null;
+        }
+    });
     const loadedImages = await Promise.all(imagePromises);
 
     tourData.elemente.forEach((element, index) => {
-        const lonLat = new OpenLayers.LonLat(element.geolokation.lon, element.geolokation.lat)
-            .transform(
-                new OpenLayers.Projection('EPSG:4326'),
-                map.getProjectionObject()
+        try {
+            const lonLat = new OpenLayers.LonLat(element.geolokation.lon, element.geolokation.lat)
+                .transform(
+                    new OpenLayers.Projection('EPSG:4326'),
+                    map.getProjectionObject()
+                );
+
+            const isVisited = visitedElements.has(element.id);
+            const fillColor = isVisited ? '#27ae60' : '#C0775C';
+            const imageDataUrl = loadedImages[index];
+
+            // Mit Bild wenn erfolgreich geladen, sonst nur Nummer
+            let iconSvg;
+            if (imageDataUrl) {
+                iconSvg = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="60" height="70">
+                        <defs>
+                            <clipPath id="clip-${element.id}-${index}">
+                                <circle cx="30" cy="30" r="25"/>
+                            </clipPath>
+                        </defs>
+                        <image href="${imageDataUrl}" x="5" y="5" width="50" height="50" clip-path="url(#clip-${element.id}-${index})" preserveAspectRatio="xMidYMid slice"/>
+                        <circle cx="30" cy="30" r="25" fill="none" stroke="${fillColor}" stroke-width="3"/>
+                        <circle cx="30" cy="60" r="10" fill="${fillColor}" stroke="white" stroke-width="2"/>
+                        <text x="30" y="65" text-anchor="middle" fill="white" font-size="12" font-weight="bold">${index + 1}</text>
+                    </svg>
+                `;
+            } else {
+                // Fallback: Einfacher Marker ohne Bild
+                iconSvg = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30">
+                        <circle cx="15" cy="15" r="12" fill="${fillColor}" stroke="white" stroke-width="2"/>
+                        <text x="15" y="20" text-anchor="middle" fill="white" font-size="14" font-weight="bold">${index + 1}</text>
+                    </svg>
+                `;
+            }
+
+            const size = imageDataUrl ? new OpenLayers.Size(60, 70) : new OpenLayers.Size(30, 30);
+            const offset = imageDataUrl ? new OpenLayers.Pixel(-30, -70) : new OpenLayers.Pixel(-15, -30);
+            const icon = new OpenLayers.Icon(
+                'data:image/svg+xml;base64,' + btoa(iconSvg),
+                size,
+                offset
             );
 
-        const isVisited = visitedElements.has(element.id);
-        const fillColor = isVisited ? '#27ae60' : '#C0775C';
-        const imageDataUrl = loadedImages[index];
-
-        // Mit Bild wenn vorhanden, sonst nur Nummer
-        let iconSvg;
-        if (imageDataUrl) {
-            iconSvg = `
-                <svg xmlns="http://www.w3.org/2000/svg" width="60" height="70">
-                    <defs>
-                        <clipPath id="clip-${index}">
-                            <circle cx="30" cy="30" r="25"/>
-                        </clipPath>
-                    </defs>
-                    <image href="${imageDataUrl}" x="5" y="5" width="50" height="50" clip-path="url(#clip-${index})" preserveAspectRatio="xMidYMid slice"/>
-                    <circle cx="30" cy="30" r="25" fill="none" stroke="${fillColor}" stroke-width="3"/>
-                    <circle cx="30" cy="60" r="10" fill="${fillColor}" stroke="white" stroke-width="2"/>
-                    <text x="30" y="65" text-anchor="middle" fill="white" font-size="12" font-weight="bold">${index + 1}</text>
-                </svg>
-            `;
-        } else {
-            iconSvg = `
-                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30">
-                    <circle cx="15" cy="15" r="12" fill="${fillColor}" stroke="white" stroke-width="2"/>
-                    <text x="15" y="20" text-anchor="middle" fill="white" font-size="14" font-weight="bold">${index + 1}</text>
-                </svg>
-            `;
+            const marker = new OpenLayers.Marker(lonLat, icon.clone());
+            markersLayer.addMarker(marker);
+        } catch (error) {
+            console.error('Fehler beim Erstellen des Markers für', element.name, error);
+            // Trotzdem einen einfachen Marker erstellen
+            try {
+                const lonLat = new OpenLayers.LonLat(element.geolokation.lon, element.geolokation.lat)
+                    .transform(
+                        new OpenLayers.Projection('EPSG:4326'),
+                        map.getProjectionObject()
+                    );
+                const isVisited = visitedElements.has(element.id);
+                const fillColor = isVisited ? '#27ae60' : '#C0775C';
+                const iconSvg = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30">
+                        <circle cx="15" cy="15" r="12" fill="${fillColor}" stroke="white" stroke-width="2"/>
+                        <text x="15" y="20" text-anchor="middle" fill="white" font-size="14" font-weight="bold">${index + 1}</text>
+                    </svg>
+                `;
+                const icon = new OpenLayers.Icon(
+                    'data:image/svg+xml;base64,' + btoa(iconSvg),
+                    new OpenLayers.Size(30, 30),
+                    new OpenLayers.Pixel(-15, -30)
+                );
+                const marker = new OpenLayers.Marker(lonLat, icon);
+                markersLayer.addMarker(marker);
+            } catch (fallbackError) {
+                console.error('Auch Fallback-Marker fehlgeschlagen für', element.name, fallbackError);
+            }
         }
-
-        const size = imageDataUrl ? new OpenLayers.Size(60, 70) : new OpenLayers.Size(30, 30);
-        const offset = imageDataUrl ? new OpenLayers.Pixel(-30, -70) : new OpenLayers.Pixel(-15, -30);
-        const icon = new OpenLayers.Icon(
-            'data:image/svg+xml;base64,' + btoa(iconSvg),
-            size,
-            offset
-        );
-
-        const marker = new OpenLayers.Marker(lonLat, icon.clone());
-        markersLayer.addMarker(marker);
     });
 }
 
@@ -424,23 +461,6 @@ function displayElements() {
             `<img src="${escapeHtml(element.bild)}" alt="${escapeHtml(element.name)}" class="element-image">` :
             '';
 
-        const checkboxHtml = `
-            <label class="checkbox-label">
-                <input type="checkbox"
-                    id="checkbox-${element.id}"
-                    ${isVisited ? 'checked' : ''}
-                    onchange="toggleVisited('${element.id}')">
-                <span>Als besucht markieren</span>
-            </label>
-        `;
-
-        const manualButtonHtml = showManualButton ?
-            `<button class="btn btn-primary" id="manual-trigger-${element.id}"
-                onclick="manualTrigger('${element.id}')">
-                📍 Mehr erfahren (${Math.round(dist)} m entfernt)
-            </button>` :
-            `<button class="btn btn-primary hidden" id="manual-trigger-${element.id}"></button>`;
-
         elementDiv.innerHTML = `
             <div class="element-content">
                 ${imageHtml}
@@ -450,12 +470,42 @@ function displayElements() {
                     <p>${escapeHtml(element.beschreibung)}</p>
                     <span class="distance-badge" id="distance-${element.id}">${distance}</span>
                     <div class="element-actions">
-                        ${checkboxHtml}
-                        ${manualButtonHtml}
+                        <label class="checkbox-label">
+                            <input type="checkbox"
+                                id="checkbox-${element.id}"
+                                data-element-id="${element.id}"
+                                ${isVisited ? 'checked' : ''}>
+                            <span>Als besucht markieren</span>
+                        </label>
+                        <button class="btn btn-primary ${showManualButton ? '' : 'hidden'}"
+                            id="manual-trigger-${element.id}"
+                            data-element-id="${element.id}">
+                            📍 Mehr erfahren ${showManualButton ? `(${Math.round(dist)} m entfernt)` : ''}
+                        </button>
                     </div>
                 </div>
             </div>
         `;
+
+        // Event-Listener für Checkbox programmatisch hinzufügen
+        const checkbox = elementDiv.querySelector(`#checkbox-${element.id}`);
+        if (checkbox) {
+            checkbox.addEventListener('change', function() {
+                const elemId = this.getAttribute('data-element-id');
+                console.log('Checkbox changed for element:', elemId, 'Checked:', this.checked);
+                toggleVisited(elemId);
+            });
+        }
+
+        // Event-Listener für Button programmatisch hinzufügen
+        const button = elementDiv.querySelector(`#manual-trigger-${element.id}`);
+        if (button) {
+            button.addEventListener('click', function() {
+                const elemId = this.getAttribute('data-element-id');
+                console.log('Manual trigger clicked for element:', elemId);
+                manualTrigger(elemId);
+            });
+        }
 
         elementsContainer.appendChild(elementDiv);
     });
