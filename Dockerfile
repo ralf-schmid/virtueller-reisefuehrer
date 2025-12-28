@@ -21,8 +21,8 @@ RUN a2enmod rewrite headers
 RUN { \
         echo "log_errors = On"; \
         echo "error_log = /var/log/php_errors.log"; \
-        echo "display_errors = On"; \
-        echo "display_startup_errors = On"; \
+        echo "display_errors = Off"; \
+        echo "display_startup_errors = Off"; \
         echo "error_reporting = E_ALL"; \
     } > /usr/local/etc/php/conf.d/error-logging.ini
 
