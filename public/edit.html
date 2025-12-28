@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tour bearbeiten - Virtuelle Stadtführungen</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .element-card {
+            background: white;
+            border: 2px solid #E8B87E;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .element-card h4 {
+            color: #2C3E50;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn-group .btn {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1 id="page-title">Tour erstellen</h1>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Touren</a></li>
+                    <li><a href="admin.html">Verwaltung</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Daten werden geladen...</p>
+            </div>
+
+            <div id="error-message" class="alert alert-danger hidden"></div>
+            <div id="success-message" class="alert alert-success hidden"></div>
+
+            <form id="tour-form">
+                <div class="card">
+                    <h2>Grundinformationen</h2>
+
+                    <div class="form-group">
+                        <label for="tour-name">Name der Tour *</label>
+                        <input type="text" id="tour-name" name="name" required placeholder="z.B. Historisches Odenthal">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tour-description">Beschreibung *</label>
+                        <textarea id="tour-description" name="beschreibung" required placeholder="Kurze Beschreibung der Tour..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tour-image">Bild-URL</label>
+                        <input type="url" id="tour-image" name="bild" placeholder="https://example.com/image.jpg">
+                        <small style="color: #666;">Optional: URL zu einem Titelbild für die Tour</small>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h2>Stationen / Elemente</h2>
+                        <button type="button" class="btn btn-success" id="add-element-btn">
+                            ➕ Station hinzufügen
+                        </button>
+                    </div>
+
+                    <div id="elements-container">
+                        <!-- Elemente werden hier dynamisch eingefügt -->
+                    </div>
+
+                    <div id="no-elements" class="text-center" style="padding: 2rem; color: #666;">
+                        <p>Noch keine Stationen vorhanden. Fügen Sie die erste Station hinzu!</p>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary">
+                        💾 Speichern
+                    </button>
+                    <a href="admin.html" class="btn btn-secondary">
+                        ❌ Abbrechen
+                    </a>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Virtuelle Stadtführungen</p>
+        </div>
+    </footer>
+
+    <script src="js/edit.js"></script>
+</body>
+</html>

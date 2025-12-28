@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtuelle Stadtführung</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/openlayers/2.13.1/OpenLayers.js"></script>
+    <style>
+        #karte {
+            width: 100%;
+            height: 70vh;
+            min-height: 400px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .tour-info {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-bar {
+            background: linear-gradient(135deg, #2C3E50 0%, #34495e 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .status-bar.active {
+            background: linear-gradient(135deg, #4A7C59 0%, #3d6548 100%);
+        }
+
+        .elements-list {
+            margin-top: 1.5rem;
+        }
+
+        .element-marker {
+            background: white;
+            padding: 0.5rem;
+            border-radius: 8px;
+            border: 2px solid #E8B87E;
+            margin-bottom: 0.5rem;
+        }
+
+        .element-marker.near {
+            border-color: #C0392B;
+            background-color: #ffe6e6;
+            animation: pulse 1s infinite;
+        }
+
+        .distance-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-left: 0.5rem;
+        }
+
+        .distance-badge.far {
+            background-color: #95a5a6;
+            color: white;
+        }
+
+        .distance-badge.near {
+            background-color: #C0392B;
+            color: white;
+        }
+
+        .distance-badge.very-near {
+            background-color: #e74c3c;
+            color: white;
+            animation: pulse 1s infinite;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1 id="tour-title">Virtuelle Stadtführung</h1>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Zurück zur Übersicht</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Tour wird geladen...</p>
+            </div>
+
+            <div id="error-message" class="alert alert-danger hidden"></div>
+
+            <div id="tour-content" class="hidden">
+                <div class="status-bar" id="status-bar">
+                    <p id="status-text">📍 Standort wird ermittelt...</p>
+                </div>
+
+                <div class="tour-info">
+                    <h2 id="info-title"></h2>
+                    <p id="info-description"></p>
+                </div>
+
+                <div id="karte"></div>
+
+                <div class="elements-list">
+                    <h3>Stationen dieser Tour:</h3>
+                    <div id="elements-container"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Virtuelle Stadtführungen</p>
+        </div>
+    </footer>
+
+    <script src="js/tour.js"></script>
+</body>
+</html>

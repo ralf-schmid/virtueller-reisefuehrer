@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verwaltung - Virtuelle Stadtführungen</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>⚙️ Verwaltung</h1>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Touren</a></li>
+                    <li><a href="admin.html" class="active">Verwaltung</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="card">
+                <h2>Touren verwalten</h2>
+                <p>Erstellen, bearbeiten und löschen Sie virtuelle Stadtführungen.</p>
+                <a href="edit.html" class="btn btn-success mt-2">
+                    ➕ Neue Tour erstellen
+                </a>
+            </div>
+
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Touren werden geladen...</p>
+            </div>
+
+            <div id="error-message" class="alert alert-danger hidden"></div>
+            <div id="success-message" class="alert alert-success hidden"></div>
+
+            <div id="tours-table" class="admin-table hidden">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Beschreibung</th>
+                            <th>Stationen</th>
+                            <th>Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tours-tbody">
+                        <!-- Touren werden hier dynamisch eingefügt -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="no-tours" class="card text-center hidden">
+                <h2>Keine Touren vorhanden</h2>
+                <p>Erstellen Sie Ihre erste virtuelle Stadtführung!</p>
+                <a href="edit.html" class="btn btn-success mt-2">Jetzt erstellen</a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Lösch-Bestätigungsdialog -->
+    <div id="delete-modal" class="modal hidden" style="display: none;">
+        <div class="modal-content">
+            <h3>Tour löschen?</h3>
+            <p>Möchten Sie diese Tour wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.</p>
+            <div class="actions">
+                <button class="btn btn-danger" id="confirm-delete">Löschen</button>
+                <button class="btn btn-secondary" id="cancel-delete">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Virtuelle Stadtführungen</p>
+        </div>
+    </footer>
+
+    <style>
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal.hidden {
+            display: none !important;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-content .actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .admin-table {
+                overflow-x: auto;
+            }
+
+            .admin-table table {
+                min-width: 600px;
+            }
+        }
+    </style>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>
