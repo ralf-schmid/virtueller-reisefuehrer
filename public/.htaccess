@@ -13,3 +13,82 @@ AddType application/x-httpd-php .php
 
 # Index-Dateien
 DirectoryIndex index.html index.php
+
+# ========================================
+# Security Headers
+# ========================================
+
+<IfModule mod_headers.c>
+    # Content Security Policy (CSP)
+    # Erlaubt: Eigene Ressourcen, PayPal, OpenLayers, externe Bilder via Proxy
+    Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.paypalobjects.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https: http:; font-src 'self' data:; connect-src 'self' https://nominatim.openstreetmap.org; frame-src 'self' https://www.paypal.com; object-src 'none'; base-uri 'self'; form-action 'self';"
+
+    # HTTP Strict Transport Security (HSTS)
+    # Erzwingt HTTPS für 1 Jahr
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+
+    # Cross-Origin-Opener-Policy (COOP)
+    # Isoliert das Fenster von anderen Dokumenten
+    Header set Cross-Origin-Opener-Policy "same-origin-allow-popups"
+
+    # X-Frame-Options
+    # Verhindert Clickjacking-Angriffe
+    Header always set X-Frame-Options "SAMEORIGIN"
+
+    # X-Content-Type-Options
+    # Verhindert MIME-Type Sniffing
+    Header set X-Content-Type-Options "nosniff"
+
+    # Referrer-Policy
+    # Kontrolliert, welche Referrer-Informationen gesendet werden
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+
+    # Permissions-Policy (früher Feature-Policy)
+    # Deaktiviert unnötige Browser-Features
+    Header set Permissions-Policy "geolocation=(self), microphone=(), camera=(), payment=(self 'https://www.paypal.com')"
+</IfModule>
+
+# ========================================
+# Cache-Optimierung
+# ========================================
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+
+    # Bilder - 1 Jahr
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+
+    # CSS und JavaScript - 1 Monat
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType text/javascript "access plus 1 month"
+
+    # Fonts - 1 Jahr
+    ExpiresByType font/woff "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType application/font-woff "access plus 1 year"
+    ExpiresByType application/font-woff2 "access plus 1 year"
+
+    # HTML - 1 Stunde
+    ExpiresByType text/html "access plus 1 hour"
+
+    # Default - 1 Tag
+    ExpiresDefault "access plus 1 day"
+</IfModule>
+
+# Cache-Control Headers
+<IfModule mod_headers.c>
+    # Statische Ressourcen - immutable für besseres Caching
+    <FilesMatch "\.(jpg|jpeg|png|gif|webp|svg|css|js|woff|woff2)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+
+    # HTML - kein immutable, damit Updates schneller sichtbar werden
+    <FilesMatch "\.(html|htm)$">
+        Header set Cache-Control "public, max-age=3600, must-revalidate"
+    </FilesMatch>
+</IfModule>

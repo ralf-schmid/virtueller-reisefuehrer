@@ -172,17 +172,35 @@
         <h3>Unterstützen Sie uns!</h3>
         <p>Ihre Spende hilft uns, weitere virtuelle Stadtführungen zu erstellen</p>
         <div id="donate-button"></div>
-        <script src="https://www.paypalobjects.com/donate/sdk/donate-sdk.js" charset="UTF-8"></script>
         <script>
-        PayPal.Donation.Button({
-        env:'production',
-        hosted_button_id:'DRTBYRML7NHSA',
-        image: {
-        src:'https://www.paypalobjects.com/de_DE/DE/i/btn/btn_donate_SM.gif',
-        alt:'Spenden mit dem PayPal-Button',
-        title:'PayPal - The safer, easier way to pay online!',
-        }
-        }).render('#donate-button');
+        // Lazy Load PayPal SDK nur wenn sichtbar (Performance-Optimierung)
+        (function() {
+            let paypalLoaded = false;
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && !paypalLoaded) {
+                        paypalLoaded = true;
+                        const script = document.createElement('script');
+                        script.src = 'https://www.paypalobjects.com/donate/sdk/donate-sdk.js';
+                        script.charset = 'UTF-8';
+                        script.onload = () => {
+                            PayPal.Donation.Button({
+                                env:'production',
+                                hosted_button_id:'DRTBYRML7NHSA',
+                                image: {
+                                    src:'https://www.paypalobjects.com/de_DE/DE/i/btn/btn_donate_SM.gif',
+                                    alt:'Spenden mit dem PayPal-Button',
+                                    title:'PayPal - The safer, easier way to pay online!',
+                                }
+                            }).render('#donate-button');
+                        };
+                        document.body.appendChild(script);
+                        observer.disconnect();
+                    }
+                });
+            }, { rootMargin: '100px' });
+            observer.observe(document.getElementById('donate-button-container'));
+        })();
         </script>
     </div>
 
