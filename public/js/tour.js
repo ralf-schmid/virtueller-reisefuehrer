@@ -13,6 +13,11 @@ let watchId = null;
 let visitedElements = new Set();
 let imageDataUrls = new Map(); // Cache für geladene Bilder als data URLs
 
+// Text-to-Speech Variablen
+let speechSynthesis = window.speechSynthesis;
+let currentUtterance = null;
+let currentSpeakingElementId = null;
+
 // Hilfsfunktion: Bild laden und in data URL konvertieren
 async function loadImageAsDataUrl(url) {
     if (!url) return null;
@@ -70,6 +75,127 @@ function showNotification(title, body) {
             icon: '/favicon.ico',
             badge: '/favicon.ico'
         });
+    }
+}
+
+// Text-to-Speech Funktionen
+function getGermanVoice() {
+    const voices = speechSynthesis.getVoices();
+    // Deutsche Stimme bevorzugen
+    let germanVoice = voices.find(voice => voice.lang.startsWith('de-'));
+    // Fallback auf erste verfügbare Stimme
+    return germanVoice || voices[0];
+}
+
+function speakText(text, elementId) {
+    // Stoppe vorherige Wiedergabe
+    stopSpeaking();
+
+    if (!text || text.trim() === '') return;
+
+    // Neue Utterance erstellen
+    currentUtterance = new SpeechSynthesisUtterance(text);
+    currentSpeakingElementId = elementId;
+
+    // Deutsche Stimme auswählen
+    const voice = getGermanVoice();
+    if (voice) {
+        currentUtterance.voice = voice;
+        currentUtterance.lang = 'de-DE';
+    }
+
+    // Einstellungen
+    currentUtterance.rate = 0.9; // Etwas langsamer für bessere Verständlichkeit
+    currentUtterance.pitch = 1.0;
+    currentUtterance.volume = 1.0;
+
+    // Event-Listener
+    currentUtterance.onstart = () => {
+        updateSpeakButton(elementId, 'speaking');
+    };
+
+    currentUtterance.onend = () => {
+        updateSpeakButton(elementId, 'stopped');
+        currentSpeakingElementId = null;
+    };
+
+    currentUtterance.onerror = (event) => {
+        console.error('Speech synthesis error:', event);
+        updateSpeakButton(elementId, 'stopped');
+        currentSpeakingElementId = null;
+    };
+
+    // Sprechen starten
+    speechSynthesis.speak(currentUtterance);
+}
+
+function stopSpeaking() {
+    if (speechSynthesis.speaking) {
+        speechSynthesis.cancel();
+    }
+    if (currentSpeakingElementId) {
+        updateSpeakButton(currentSpeakingElementId, 'stopped');
+        currentSpeakingElementId = null;
+    }
+}
+
+function pauseSpeaking() {
+    if (speechSynthesis.speaking && !speechSynthesis.paused) {
+        speechSynthesis.pause();
+    }
+}
+
+function resumeSpeaking() {
+    if (speechSynthesis.paused) {
+        speechSynthesis.resume();
+    }
+}
+
+function updateSpeakButton(elementId, state) {
+    const button = document.getElementById(`speak-btn-${elementId}`);
+    if (!button) return;
+
+    const icon = button.querySelector('.speak-icon');
+    if (!icon) return;
+
+    switch (state) {
+        case 'speaking':
+            icon.textContent = '⏸️';
+            button.title = 'Vorlesen pausieren';
+            button.classList.add('speaking');
+            break;
+        case 'paused':
+            icon.textContent = '▶️';
+            button.title = 'Vorlesen fortsetzen';
+            button.classList.add('paused');
+            break;
+        case 'stopped':
+        default:
+            icon.textContent = '🔊';
+            button.title = 'Text vorlesen';
+            button.classList.remove('speaking', 'paused');
+            break;
+    }
+}
+
+// Text-to-Speech für eine Station
+window.toggleSpeak = function(elementId) {
+    const element = tourData.elemente.find(e => e.id === elementId);
+    if (!element) return;
+
+    // Wenn dieser Text bereits gesprochen wird
+    if (currentSpeakingElementId === elementId) {
+        if (speechSynthesis.paused) {
+            resumeSpeaking();
+            updateSpeakButton(elementId, 'speaking');
+        } else if (speechSynthesis.speaking) {
+            pauseSpeaking();
+            updateSpeakButton(elementId, 'paused');
+        }
+    } else {
+        // Neuen Text sprechen
+        const textToSpeak = `${element.name}. ${element.titel || ''}. ${element.beschreibung}`;
+        speakText(textToSpeak, elementId);
     }
 }
 
@@ -477,6 +603,10 @@ function displayElements() {
                     <p>${escapeHtml(element.beschreibung)}</p>
                     <span class="distance-badge" id="distance-${element.id}">${distance}</span>
                     <div class="element-actions">
+                        <button class="btn btn-speak" id="speak-btn-${element.id}"
+                            data-element-id="${element.id}" title="Text vorlesen">
+                            <span class="speak-icon">🔊</span> Vorlesen
+                        </button>
                         <label class="checkbox-label">
                             <input type="checkbox"
                                 id="checkbox-${element.id}"
@@ -511,6 +641,15 @@ function displayElements() {
                 const elemId = this.getAttribute('data-element-id');
                 console.log('Manual trigger clicked for element:', elemId);
                 manualTrigger(elemId);
+            });
+        }
+
+        // Event-Listener für Speak-Button programmatisch hinzufügen
+        const speakButton = elementDiv.querySelector(`#speak-btn-${element.id}`);
+        if (speakButton) {
+            speakButton.addEventListener('click', function() {
+                const elemId = this.getAttribute('data-element-id');
+                toggleSpeak(elemId);
             });
         }
 
@@ -639,4 +778,11 @@ window.addEventListener('beforeunload', () => {
     if (watchId !== null) {
         navigator.geolocation.clearWatch(watchId);
     }
+    // Stoppe Text-to-Speech
+    stopSpeaking();
 });
+
+// Stimmen laden (muss nach dem Laden der Seite erfolgen)
+if (speechSynthesis.onvoiceschanged !== undefined) {
+    speechSynthesis.onvoiceschanged = getGermanVoice;
+}
