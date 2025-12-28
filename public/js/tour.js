@@ -13,10 +13,9 @@ let watchId = null;
 let visitedElements = new Set();
 let imageDataUrls = new Map(); // Cache für geladene Bilder als data URLs
 
-// Text-to-Speech Variablen
-let speechSynthesis = window.speechSynthesis;
-let currentUtterance = null;
-let currentSpeakingElementId = null;
+// Audio-Player Variablen
+let currentAudio = null;
+let currentPlayingElementId = null;
 
 // Hilfsfunktion: Bild laden und in data URL konvertieren
 async function loadImageAsDataUrl(url) {
@@ -78,124 +77,125 @@ function showNotification(title, body) {
     }
 }
 
-// Text-to-Speech Funktionen
-function getGermanVoice() {
-    const voices = speechSynthesis.getVoices();
-    // Deutsche Stimme bevorzugen
-    let germanVoice = voices.find(voice => voice.lang.startsWith('de-'));
-    // Fallback auf erste verfügbare Stimme
-    return germanVoice || voices[0];
-}
-
-function speakText(text, elementId) {
+// Audio-Player Funktionen
+function playAudio(audioUrl, elementId) {
     // Stoppe vorherige Wiedergabe
-    stopSpeaking();
+    stopAudio();
 
-    if (!text || text.trim() === '') return;
-
-    // Neue Utterance erstellen
-    currentUtterance = new SpeechSynthesisUtterance(text);
-    currentSpeakingElementId = elementId;
-
-    // Deutsche Stimme auswählen
-    const voice = getGermanVoice();
-    if (voice) {
-        currentUtterance.voice = voice;
-        currentUtterance.lang = 'de-DE';
+    if (!audioUrl || audioUrl.trim() === '') {
+        console.warn('Keine Audio-Datei vorhanden für Element:', elementId);
+        return;
     }
 
-    // Einstellungen
-    currentUtterance.rate = 0.9; // Etwas langsamer für bessere Verständlichkeit
-    currentUtterance.pitch = 1.0;
-    currentUtterance.volume = 1.0;
+    // Neues Audio-Element erstellen
+    currentAudio = new Audio(audioUrl);
+    currentPlayingElementId = elementId;
 
     // Event-Listener
-    currentUtterance.onstart = () => {
-        updateSpeakButton(elementId, 'speaking');
-    };
+    currentAudio.addEventListener('play', () => {
+        updateAudioButton(elementId, 'playing');
+    });
 
-    currentUtterance.onend = () => {
-        updateSpeakButton(elementId, 'stopped');
-        currentSpeakingElementId = null;
-    };
+    currentAudio.addEventListener('ended', () => {
+        updateAudioButton(elementId, 'stopped');
+        currentPlayingElementId = null;
+        currentAudio = null;
+    });
 
-    currentUtterance.onerror = (event) => {
-        console.error('Speech synthesis error:', event);
-        updateSpeakButton(elementId, 'stopped');
-        currentSpeakingElementId = null;
-    };
+    currentAudio.addEventListener('pause', () => {
+        updateAudioButton(elementId, 'paused');
+    });
 
-    // Sprechen starten
-    speechSynthesis.speak(currentUtterance);
+    currentAudio.addEventListener('error', (e) => {
+        console.error('Audio playback error:', e);
+        updateAudioButton(elementId, 'stopped');
+        currentPlayingElementId = null;
+        currentAudio = null;
+    });
+
+    // Audio abspielen
+    currentAudio.play().catch(error => {
+        console.error('Fehler beim Abspielen:', error);
+        updateAudioButton(elementId, 'stopped');
+    });
 }
 
-function stopSpeaking() {
-    if (speechSynthesis.speaking) {
-        speechSynthesis.cancel();
+function stopAudio() {
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+        currentAudio = null;
     }
-    if (currentSpeakingElementId) {
-        updateSpeakButton(currentSpeakingElementId, 'stopped');
-        currentSpeakingElementId = null;
-    }
-}
-
-function pauseSpeaking() {
-    if (speechSynthesis.speaking && !speechSynthesis.paused) {
-        speechSynthesis.pause();
+    if (currentPlayingElementId) {
+        updateAudioButton(currentPlayingElementId, 'stopped');
+        currentPlayingElementId = null;
     }
 }
 
-function resumeSpeaking() {
-    if (speechSynthesis.paused) {
-        speechSynthesis.resume();
+function pauseAudio() {
+    if (currentAudio && !currentAudio.paused) {
+        currentAudio.pause();
     }
 }
 
-function updateSpeakButton(elementId, state) {
-    const button = document.getElementById(`speak-btn-${elementId}`);
+function resumeAudio() {
+    if (currentAudio && currentAudio.paused) {
+        currentAudio.play().catch(error => {
+            console.error('Fehler beim Fortsetzen:', error);
+        });
+    }
+}
+
+function updateAudioButton(elementId, state) {
+    const button = document.getElementById(`audio-btn-${elementId}`);
     if (!button) return;
 
-    const icon = button.querySelector('.speak-icon');
+    const icon = button.querySelector('.audio-icon');
     if (!icon) return;
 
     switch (state) {
-        case 'speaking':
+        case 'playing':
             icon.textContent = '⏸️';
-            button.title = 'Vorlesen pausieren';
-            button.classList.add('speaking');
+            button.title = 'Audio pausieren';
+            button.classList.remove('paused');
+            button.classList.add('playing');
             break;
         case 'paused':
             icon.textContent = '▶️';
-            button.title = 'Vorlesen fortsetzen';
+            button.title = 'Audio fortsetzen';
+            button.classList.remove('playing');
             button.classList.add('paused');
             break;
         case 'stopped':
         default:
             icon.textContent = '🔊';
-            button.title = 'Text vorlesen';
-            button.classList.remove('speaking', 'paused');
+            button.title = 'Audio abspielen';
+            button.classList.remove('playing', 'paused');
             break;
     }
 }
 
-// Text-to-Speech für eine Station
-window.toggleSpeak = function(elementId) {
+// Audio für eine Station abspielen
+window.toggleAudio = function(elementId) {
     const element = tourData.elemente.find(e => e.id === elementId);
     if (!element) return;
 
-    // Wenn dieser Text bereits gesprochen wird
-    if (currentSpeakingElementId === elementId) {
-        if (speechSynthesis.paused) {
-            resumeSpeaking();
-            updateSpeakButton(elementId, 'speaking');
-        } else if (speechSynthesis.speaking) {
-            pauseSpeaking();
-            updateSpeakButton(elementId, 'paused');
+    // Prüfen ob Audio-Datei vorhanden
+    if (!element.audio || element.audio.trim() === '') {
+        alert('Für diese Station ist keine Audio-Datei vorhanden.');
+        return;
+    }
+
+    // Wenn dieses Audio bereits abgespielt wird
+    if (currentPlayingElementId === elementId) {
+        if (currentAudio && currentAudio.paused) {
+            resumeAudio();
+        } else if (currentAudio && !currentAudio.paused) {
+            pauseAudio();
         }
     } else {
-        // Neuen Text sprechen
-        const textToSpeak = `${element.name}. ${element.titel || ''}. ${element.beschreibung}`;
-        speakText(textToSpeak, elementId);
+        // Neues Audio abspielen
+        playAudio(element.audio, elementId);
     }
 }
 
@@ -603,10 +603,12 @@ function displayElements() {
                     <p>${escapeHtml(element.beschreibung)}</p>
                     <span class="distance-badge" id="distance-${element.id}">${distance}</span>
                     <div class="element-actions">
-                        <button class="btn btn-speak" id="speak-btn-${element.id}"
-                            data-element-id="${element.id}" title="Text vorlesen">
-                            <span class="speak-icon">🔊</span> Vorlesen
+                        ${element.audio ? `
+                        <button class="btn btn-audio" id="audio-btn-${element.id}"
+                            data-element-id="${element.id}" title="Audio abspielen">
+                            <span class="audio-icon">🔊</span> Audio abspielen
                         </button>
+                        ` : ''}
                         <label class="checkbox-label">
                             <input type="checkbox"
                                 id="checkbox-${element.id}"
@@ -644,12 +646,12 @@ function displayElements() {
             });
         }
 
-        // Event-Listener für Speak-Button programmatisch hinzufügen
-        const speakButton = elementDiv.querySelector(`#speak-btn-${element.id}`);
-        if (speakButton) {
-            speakButton.addEventListener('click', function() {
+        // Event-Listener für Audio-Button programmatisch hinzufügen
+        const audioButton = elementDiv.querySelector(`#audio-btn-${element.id}`);
+        if (audioButton) {
+            audioButton.addEventListener('click', function() {
                 const elemId = this.getAttribute('data-element-id');
-                toggleSpeak(elemId);
+                toggleAudio(elemId);
             });
         }
 
@@ -779,11 +781,6 @@ window.addEventListener('pagehide', () => {
     if (watchId !== null) {
         navigator.geolocation.clearWatch(watchId);
     }
-    // Stoppe Text-to-Speech
-    stopSpeaking();
+    // Stoppe Audio-Wiedergabe
+    stopAudio();
 });
-
-// Stimmen laden (muss nach dem Laden der Seite erfolgen)
-if (speechSynthesis.onvoiceschanged !== undefined) {
-    speechSynthesis.onvoiceschanged = getGermanVoice;
-}
