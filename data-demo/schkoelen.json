@@ -1,0 +1,34 @@
+[
+  {
+    "id": "schkoelen-tour",
+    "name": "Tour durch Schkölen",
+    "beschreibung": "Die Sehenswürdigkeiten von Schkölen",
+    "bild": "http://fotos.verwaltungsportal.de/menuAdministration/2/0/5/7/2/4/gross/Schkoelen.jpg",
+    "elemente": [
+      {
+        "id": "wasserburg",
+        "name": "Wasserburg",
+        "titel": "Wasserburg Schkölen",
+        "beschreibung": "Wer sich auf eine Entdeckungstour nach Schkölen begibt, wird überrascht sein, inmitten des Stadtzentrums eine gut erhaltene Wasserburg vorzufinden. Noch mehr wird es den Besucher überraschen, wenn er aus der Burggeschichte erfährt, dass die einst verlassene Burganlage erst ab Ende der 1960-er Jahre von den Einwohnern der Stadt ausgegraben und teilweise rekonstruiert wurde. Grabungen wurden bis 2008 durchgeführt, bei denen unbekannte Gewölbe und Gänge ans Tageslicht kamen. Leider mussten diese teilweise wieder geschlossen werden, weil der Wasserspiegel ein Begehen der Gewölbe unmöglich macht.",
+        "bild": "https://www.saaleland.de/images/pixx/inhaltsbilder/themen/burgen-schloesser/TITEL_-Wasserschloss--Schklen-Klaus-Enkelmann--4920-GROSS.jpg",
+        "link": "https://www.saaleland.de/index.php/wasserburg-schkoelen",
+        "geolokation": {
+          "lat": 51.041898,
+          "lon": 11.819474
+        }
+      },
+      {
+        "id": "stadtkirche",
+        "name": "Stadtkirche Schkölen",
+        "titel": "Die evangelische Stadtkirche Schkölen",
+        "beschreibung": "Die evangelische Stadtkirche Schkölen (Barockkirche Beatae Mariae Virginis) steht in der Stadt Schkölen im Saale-Holzland-Kreis in Thüringen. Sie ist eine der Kirchen im Kirchengemeindeverband Schkölen-Zschorgula und gehört damit zum Kirchenkreis Naumburg-Zeitz der Evangelischen Kirche in Mitteldeutschland.",
+        "bild": "https://upload.wikimedia.org/wikipedia/commons/2/2d/Kirche_Schk%C3%B6len.JPG",
+        "link": "https://de.wikipedia.org/wiki/Stadtkirche_Schk%C3%B6len",
+        "geolokation": {
+          "lat": 51.040827,
+          "lon": 11.817696
+        }
+      }
+    ]
+  }
+]
