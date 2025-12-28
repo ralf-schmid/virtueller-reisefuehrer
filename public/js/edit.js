@@ -252,7 +252,11 @@ async function saveTour(event) {
             throw new Error(`HTTP-Fehler! Status: ${response.status}`);
         }
 
-        const result = await response.json();
+        // Response Text für Debugging loggen
+        const responseText = await response.text();
+        console.log('API Response:', responseText);
+
+        const result = JSON.parse(responseText);
 
         showLoading(false);
         showSuccess(tourId ? 'Tour erfolgreich aktualisiert!' : 'Tour erfolgreich erstellt!');

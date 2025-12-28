@@ -46,13 +46,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=main
 
       - name: Build Docker image
         uses: docker/build-push-action@v5
@@ -72,13 +66,29 @@ jobs:
           docker run -d --name test-container -p 8080:80 $(echo "${{ steps.meta.outputs.tags }}" | head -n1)
 
           # Kurz warten bis Apache gestartet ist
-          sleep 5
+          sleep 10
 
           # Testen ob die Hauptseite erreichbar ist
+          echo "=== Testing index page ==="
           curl -f http://localhost:8080/ || exit 1
 
           # Testen ob die API erreichbar ist
-          curl -f http://localhost:8080/api/tours.php || exit 1
+          echo "=== Testing API endpoint ==="
+          HTTP_CODE=$(curl -s -o /tmp/api_response.txt -w "%{http_code}" http://localhost:8080/api/tours.php)
+          echo "HTTP Status Code: $HTTP_CODE"
+          echo "Response:"
+          cat /tmp/api_response.txt
+
+          # Logs ausgeben bei Fehler
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "=== Container Logs ==="
+            docker logs test-container
+            echo "=== Apache Error Log ==="
+            docker exec test-container cat /var/log/apache2/error.log || true
+            echo "=== PHP Error Log ==="
+            docker exec test-container cat /var/log/php_errors.log || true
+            exit 1
+          fi
 
           # Container stoppen
           docker stop test-container
@@ -95,6 +105,13 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Trigger Webhook
+        if: github.event_name != 'pull_request'
+        run: |
+          curl -X POST https://dashboard.dtcloud.de/v1/webhooks/native \
+          -H "Content-Type: application/json" \
+          -d '{"name": "ghcr.io/${{ github.repository }}", "tag": "main"}'
 
       # Artifact attestation (optional - erfordert OIDC Token Permissions)
       # - name: Generate artifact attestation
