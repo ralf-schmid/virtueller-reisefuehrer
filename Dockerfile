@@ -17,6 +17,12 @@ RUN apt-get update && apt-get install -y \
 # Apache mod_rewrite aktivieren
 RUN a2enmod rewrite
 
+# PHP Error Logging konfigurieren
+RUN echo "log_errors = On" >> /usr/local/etc/php/conf.d/error-logging.ini \
+    && echo "error_log = /var/log/php_errors.log" >> /usr/local/etc/php/conf.d/error-logging.ini \
+    && echo "display_errors = Off" >> /usr/local/etc/php/conf.d/error-logging.ini \
+    && echo "display_startup_errors = Off" >> /usr/local/etc/php/conf.d/error-logging.ini
+
 # Apache-Konfiguration
 RUN echo '<Directory /var/www/html/>\n\
     Options Indexes FollowSymLinks\n\
@@ -24,6 +30,16 @@ RUN echo '<Directory /var/www/html/>\n\
     Require all granted\n\
 </Directory>' > /etc/apache2/conf-available/docker-php.conf \
     && a2enconf docker-php
+
+# Apache Logging in Dateien konfigurieren (nicht stdout/stderr)
+RUN sed -i 's#ErrorLog.*#ErrorLog /var/log/apache2/error.log#g' /etc/apache2/apache2.conf \
+    && sed -i 's#CustomLog.*#CustomLog /var/log/apache2/access.log combined#g' /etc/apache2/sites-available/000-default.conf
+
+# Log-Verzeichnisse erstellen und Berechtigungen setzen
+RUN mkdir -p /var/log/apache2 \
+    && touch /var/log/php_errors.log \
+    && chown -R www-data:www-data /var/log/apache2 /var/log/php_errors.log \
+    && chmod 644 /var/log/php_errors.log
 
 # Arbeitsverzeichnis setzen
 WORKDIR /var/www/html

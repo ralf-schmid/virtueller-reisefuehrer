@@ -273,6 +273,36 @@ docker-compose -f docker-compose.s3.yml up -d
 
 Siehe `S3-SETUP.md` für Details zur S3-Konfiguration.
 
+### 📋 Logging & Debugging
+
+Die Anwendung schreibt Logs in Dateien (nicht stdout/stderr):
+
+**Log-Dateien:**
+- **Apache Error Log:** `/var/log/apache2/error.log`
+- **Apache Access Log:** `/var/log/apache2/access.log`
+- **PHP Error Log:** `/var/log/php_errors.log`
+
+**Logs anzeigen:**
+```bash
+# Apache Error Log
+docker exec virtuelle-stadtfuehrungen tail -f /var/log/apache2/error.log
+
+# Apache Access Log
+docker exec virtuelle-stadtfuehrungen tail -f /var/log/apache2/access.log
+
+# PHP Errors
+docker exec virtuelle-stadtfuehrungen tail -f /var/log/php_errors.log
+
+# Alle Logs gleichzeitig
+docker exec virtuelle-stadtfuehrungen tail -f /var/log/apache2/*.log /var/log/php_errors.log
+```
+
+**API-Test-Script:**
+```bash
+# Datei-Berechtigungen und Schreibrechte testen
+docker exec virtuelle-stadtfuehrungen php /var/www/html/api/test.php
+```
+
 ## 🛠️ Entwicklung
 
 ### Lokale Entwicklung starten
