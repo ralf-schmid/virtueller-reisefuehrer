@@ -435,13 +435,21 @@ async function addTourMarkers() {
 
     tourData.elemente.forEach((element, index) => {
         try {
+            // Gleicher Fallback wie in displayElements()
+            let elementId = element.id;
+            if (!elementId || elementId === 'undefined' || elementId === 'null') {
+                const safeName = (element.name || 'unknown').toLowerCase().replace(/[^a-z0-9]/g, '-');
+                elementId = `elem-${index}-${safeName}`;
+                if (!element.id) element.id = elementId; // Setze ID falls noch nicht gesetzt
+            }
+
             const lonLat = new OpenLayers.LonLat(element.geolokation.lon, element.geolokation.lat)
                 .transform(
                     new OpenLayers.Projection('EPSG:4326'),
                     map.getProjectionObject()
                 );
 
-            const isVisited = visitedElements.has(element.id);
+            const isVisited = visitedElements.has(elementId);
             const fillColor = isVisited ? '#27ae60' : '#C0775C';
             const imageDataUrl = loadedImages[index];
 
@@ -451,11 +459,11 @@ async function addTourMarkers() {
                 iconSvg = `
                     <svg xmlns="http://www.w3.org/2000/svg" width="60" height="70">
                         <defs>
-                            <clipPath id="clip-${element.id}-${index}">
+                            <clipPath id="clip-${elementId}-${index}">
                                 <circle cx="30" cy="30" r="25"/>
                             </clipPath>
                         </defs>
-                        <image href="${imageDataUrl}" x="5" y="5" width="50" height="50" clip-path="url(#clip-${element.id}-${index})" preserveAspectRatio="xMidYMid slice"/>
+                        <image href="${imageDataUrl}" x="5" y="5" width="50" height="50" clip-path="url(#clip-${elementId}-${index})" preserveAspectRatio="xMidYMid slice"/>
                         <circle cx="30" cy="30" r="25" fill="none" stroke="${fillColor}" stroke-width="3"/>
                         <circle cx="30" cy="60" r="10" fill="${fillColor}" stroke="white" stroke-width="2"/>
                         <text x="30" y="65" text-anchor="middle" fill="white" font-size="12" font-weight="bold">${index + 1}</text>
@@ -484,7 +492,7 @@ async function addTourMarkers() {
             // WICHTIG: Click-Event für Marker - scrollt zum Element
             marker.events.register('click', marker, function(evt) {
                 evt.stopPropagation();
-                const elementDiv = document.getElementById(`element-${element.id}`);
+                const elementDiv = document.getElementById(`element-${elementId}`);
                 if (elementDiv) {
                     elementDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     // Kurzes visuelles Feedback
@@ -525,7 +533,7 @@ async function addTourMarkers() {
                 // Click-Event auch für Fallback-Marker
                 marker.events.register('click', marker, function(evt) {
                     evt.stopPropagation();
-                    const elementDiv = document.getElementById(`element-${element.id}`);
+                    const elementDiv = document.getElementById(`element-${elementId}`);
                     if (elementDiv) {
                         elementDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
                         elementDiv.style.transition = 'background-color 0.3s';
@@ -649,18 +657,24 @@ function displayElements() {
     elementsContainer.innerHTML = '';
 
     tourData.elemente.forEach((element, index) => {
-        // KRITISCHE VALIDIERUNG: Prüfe ob element.id existiert
-        if (!element.id) {
-            console.error('Element ohne ID gefunden:', element);
-            return; // Überspringe Elemente ohne ID
+        // KRITISCHE VALIDIERUNG + FALLBACK: Verwende Index wenn ID fehlt
+        let elementId = element.id;
+
+        if (!elementId || elementId === 'undefined' || elementId === 'null') {
+            console.error('Element ohne gültige ID gefunden:', element);
+            // Fallback: Verwende Index + Name als ID
+            const safeName = (element.name || 'unknown').toLowerCase().replace(/[^a-z0-9]/g, '-');
+            elementId = `elem-${index}-${safeName}`;
+            element.id = elementId; // Setze die ID im Element-Objekt
+            console.warn(`FALLBACK: ID generiert für Element ${index}: "${elementId}"`);
         }
 
         const elementDiv = document.createElement('div');
-        const isVisited = visitedElements.has(element.id);
+        const isVisited = visitedElements.has(elementId);
         elementDiv.className = isVisited ? 'element-marker visited' : 'element-marker';
-        elementDiv.id = `element-${element.id}`;
+        elementDiv.id = `element-${elementId}`;
 
-        console.log(`Creating element ${element.id}, visited: ${isVisited}, className: ${elementDiv.className}`);
+        console.log(`Creating element ${elementId}, visited: ${isVisited}, className: ${elementDiv.className}`);
 
         let distance = '';
         let dist = 0;
@@ -687,24 +701,24 @@ function displayElements() {
                     <h4>${index + 1}. ${escapeHtml(element.name)}</h4>
                     ${element.titel ? `<p><strong>${escapeHtml(element.titel)}</strong></p>` : ''}
                     <p>${escapeHtml(element.beschreibung)}</p>
-                    <span class="distance-badge" id="distance-${element.id}">${distance}</span>
+                    <span class="distance-badge" id="distance-${elementId}">${distance}</span>
                     <div class="element-actions">
                         ${element.audio ? `
-                        <button class="btn btn-audio" id="audio-btn-${element.id}"
-                            data-element-id="${element.id}" title="Audio abspielen">
+                        <button class="btn btn-audio" id="audio-btn-${elementId}"
+                            data-element-id="${elementId}" title="Audio abspielen">
                             <span class="audio-icon">🔊</span> Audio abspielen
                         </button>
                         ` : ''}
                         <label class="checkbox-label">
                             <input type="checkbox"
-                                id="checkbox-${element.id}"
-                                data-element-id="${element.id}"
+                                id="checkbox-${elementId}"
+                                data-element-id="${elementId}"
                                 ${isVisited ? 'checked' : ''}>
                             <span>Als besucht markieren</span>
                         </label>
                         <button class="btn btn-primary ${showManualButton ? '' : 'hidden'}"
-                            id="manual-trigger-${element.id}"
-                            data-element-id="${element.id}">
+                            id="manual-trigger-${elementId}"
+                            data-element-id="${elementId}">
                             📍 Mehr erfahren ${showManualButton ? `(${Math.round(dist)} m entfernt)` : ''}
                         </button>
                     </div>
@@ -716,7 +730,7 @@ function displayElements() {
         const checkbox = elementDiv.querySelector('input[type="checkbox"]');
         if (checkbox) {
             const checkboxElementId = checkbox.getAttribute('data-element-id');
-            console.log(`Checkbox created for element ${element.id}, data-element-id="${checkboxElementId}"`);
+            console.log(`Checkbox created for element ${elementId}, data-element-id="${checkboxElementId}"`);
 
             checkbox.addEventListener('change', function(event) {
                 event.stopPropagation();
@@ -728,15 +742,15 @@ function displayElements() {
                 if (elemId && elemId !== 'undefined' && elemId !== 'null') {
                     toggleVisited(elemId);
                 } else {
-                    console.error('Invalid elementId from checkbox:', elemId, 'Original element.id:', element.id);
+                    console.error('Invalid elementId from checkbox:', elemId, 'Expected elementId:', elementId);
                 }
             });
         } else {
-            console.error('Checkbox not found for element:', element.id);
+            console.error('Checkbox not found for element:', elementId);
         }
 
         // Event-Listener für Button programmatisch hinzufügen
-        const button = elementDiv.querySelector(`#manual-trigger-${element.id}`);
+        const button = elementDiv.querySelector(`#manual-trigger-${elementId}`);
         if (button) {
             button.addEventListener('click', function() {
                 const elemId = this.getAttribute('data-element-id');
@@ -746,7 +760,7 @@ function displayElements() {
         }
 
         // Event-Listener für Audio-Button programmatisch hinzufügen
-        const audioButton = elementDiv.querySelector(`#audio-btn-${element.id}`);
+        const audioButton = elementDiv.querySelector(`#audio-btn-${elementId}`);
         if (audioButton) {
             audioButton.addEventListener('click', function() {
                 const elemId = this.getAttribute('data-element-id');
