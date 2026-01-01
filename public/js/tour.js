@@ -61,9 +61,13 @@ function saveVisitedElements() {
 }
 
 // Push-Benachrichtigungen aktivieren
+// HINWEIS: Muss aus einem Benutzer-Event (z.B. Button-Click) aufgerufen werden!
+// Moderne Browser blockieren automatische Notification-Anfragen beim Seitenladen
 function requestNotificationPermission() {
     if ('Notification' in window && Notification.permission === 'default') {
-        Notification.requestPermission();
+        Notification.requestPermission().catch(err => {
+            console.log('Notification permission request blocked:', err);
+        });
     }
 }
 
@@ -224,8 +228,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Besuchte Elemente aus LocalStorage laden
     loadVisitedElements();
 
-    // Push-Benachrichtigungen anfragen
-    requestNotificationPermission();
+    // Push-Benachrichtigungen NICHT automatisch anfragen (moderne Browser blockieren dies)
+    // Benachrichtigungen werden nur angezeigt, wenn bereits Berechtigung erteilt wurde
 
     loadTour();
 });

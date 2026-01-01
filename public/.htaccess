@@ -21,7 +21,7 @@ DirectoryIndex index.html index.php
 <IfModule mod_headers.c>
     # Content Security Policy (CSP)
     # Erlaubt: Eigene Ressourcen, PayPal, OpenLayers, externe Bilder via Proxy
-    Header set Content-Security-Policy "default-src 'self'; script-src 'self' https://www.paypalobjects.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https: http: blob:; font-src 'self' data:; connect-src 'self' https://nominatim.openstreetmap.org https://tile.openstreetmap.org https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org; frame-src 'self' https://www.paypal.com; object-src 'none'; base-uri 'self'; form-action 'self';"
+    Header set Content-Security-Policy "default-src 'self'; script-src 'self' https://www.paypalobjects.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; img-src 'self' data: https: http: blob:; font-src 'self' data:; connect-src 'self' https://nominatim.openstreetmap.org https://tile.openstreetmap.org https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org; frame-src 'self' https://www.paypal.com; object-src 'none'; base-uri 'self'; form-action 'self';"
 
     # HTTP Strict Transport Security (HSTS)
     # Erzwingt HTTPS für 1 Jahr
