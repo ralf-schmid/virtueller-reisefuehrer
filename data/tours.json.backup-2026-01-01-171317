@@ -1,0 +1,66 @@
+[
+  {
+    "id": "odenthal-historisch",
+    "name": "Historisches Odenthal",
+    "beschreibung": "Entdecken Sie die historischen Schätze von Odenthal auf dieser spannenden virtuellen Stadtführung.",
+    "bild": "https://via.placeholder.com/400x300/2C3E50/FFFFFF?text=Odenthal+Historisch",
+    "elemente": [
+      {
+        "id": "rathaus",
+        "name": "Altes Rathaus",
+        "titel": "Das historische Rathaus von Odenthal",
+        "beschreibung": "Das alte Rathaus wurde 1892 erbaut und ist ein wunderschönes Beispiel für die Architektur des späten 19. Jahrhunderts.",
+        "bild": "https://via.placeholder.com/300x200/E8B87E/333333?text=Rathaus",
+        "link": "https://de.wikipedia.org/wiki/Odenthal",
+        "geolokation": {
+          "lat": 51.0344,
+          "lon": 7.1089
+        }
+      },
+      {
+        "id": "kirche",
+        "name": "St. Pankratius Kirche",
+        "titel": "Die katholische Pfarrkirche",
+        "beschreibung": "Die St. Pankratius Kirche ist ein beeindruckendes Bauwerk aus dem 12. Jahrhundert mit romanischen Elementen.",
+        "bild": "https://via.placeholder.com/300x200/C0775C/FFFFFF?text=Kirche",
+        "link": "https://de.wikipedia.org/wiki/St._Pankratius_(Odenthal)",
+        "geolokation": {
+          "lat": 51.0356,
+          "lon": 7.1102
+        }
+      },
+      {
+        "id": "kulturhof",
+        "name": "Kulturhof Odenthal",
+        "titel": "Zentrum für Kunst und Kultur",
+        "beschreibung": "Der Kulturhof ist ein lebendiger Ort für Veranstaltungen, Ausstellungen und kulturelle Begegnungen.",
+        "bild": "https://via.placeholder.com/300x200/2C3E50/E8B87E?text=Kulturhof",
+        "link": "https://kulturspiegelodenthal.de/",
+        "geolokation": {
+          "lat": 51.0338,
+          "lon": 7.1095
+        }
+      }
+    ]
+  },
+  {
+    "id": "natur-wanderung",
+    "name": "Natur & Wanderwege",
+    "beschreibung": "Erleben Sie die wunderschöne Natur rund um Odenthal auf dieser virtuellen Wanderung.",
+    "bild": "https://via.placeholder.com/400x300/4A7C59/FFFFFF?text=Natur+Tour",
+    "elemente": [
+      {
+        "id": "dhueenntalsperre",
+        "name": "Dhünntalsperre",
+        "titel": "Die größte Trinkwassertalsperre im Rheinland",
+        "beschreibung": "Die Dhünntalsperre wurde 1985 fertiggestellt und versorgt die Region mit frischem Trinkwasser.",
+        "bild": "https://via.placeholder.com/300x200/4A7C59/FFFFFF?text=Talsperre",
+        "link": "https://de.wikipedia.org/wiki/Große_Dhünn-Talsperre",
+        "geolokation": {
+          "lat": 51.0500,
+          "lon": 7.1500
+        }
+      }
+    ]
+  }
+]
