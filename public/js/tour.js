@@ -631,13 +631,24 @@ function displayElements() {
         `;
 
         // Event-Listener für Checkbox programmatisch hinzufügen
-        const checkbox = elementDiv.querySelector(`#checkbox-${element.id}`);
+        // Verwende querySelector innerhalb von elementDiv für isolierte Suche
+        const checkbox = elementDiv.querySelector('input[type="checkbox"]');
         if (checkbox) {
-            checkbox.addEventListener('change', function() {
-                const elemId = this.getAttribute('data-element-id');
+            // Stelle sicher, dass data-element-id korrekt gesetzt ist
+            checkbox.dataset.elementId = element.id;
+
+            checkbox.addEventListener('change', function(event) {
+                // Verhindere Event-Propagation
+                event.stopPropagation();
+
+                const elemId = this.dataset.elementId;
                 console.log('Checkbox changed for element:', elemId, 'Checked:', this.checked);
+
+                // Sofort togglen ohne auf async zu warten
                 toggleVisited(elemId);
             });
+        } else {
+            console.error('Checkbox not found for element:', element.id);
         }
 
         // Event-Listener für Button programmatisch hinzufügen
@@ -664,38 +675,58 @@ function displayElements() {
 }
 
 // Element manuell als besucht/unbesucht markieren
-window.toggleVisited = async function(elementId) {
-    console.log('toggleVisited called for:', elementId);
+window.toggleVisited = function(elementId) {
+    console.log('=== toggleVisited START ===');
+    console.log('Element ID:', elementId);
     console.log('visitedElements before:', Array.from(visitedElements));
 
-    if (visitedElements.has(elementId)) {
+    // Validierung: elementId muss definiert sein
+    if (!elementId || elementId === 'undefined') {
+        console.error('Invalid elementId:', elementId);
+        return;
+    }
+
+    // Toggle visited state
+    const wasVisited = visitedElements.has(elementId);
+    if (wasVisited) {
         visitedElements.delete(elementId);
         console.log('Removed', elementId, 'from visitedElements');
     } else {
         visitedElements.add(elementId);
         console.log('Added', elementId, 'to visitedElements');
     }
+    const isNowVisited = visitedElements.has(elementId);
 
     console.log('visitedElements after:', Array.from(visitedElements));
     saveVisitedElements();
 
-    // Nur die spezifische Checkbox aktualisieren statt alles neu zu rendern
+    // Nur die spezifische Checkbox aktualisieren
     const checkbox = document.getElementById(`checkbox-${elementId}`);
     if (checkbox) {
-        checkbox.checked = visitedElements.has(elementId);
+        checkbox.checked = isNowVisited;
+        console.log('Updated checkbox checked state to:', isNowVisited);
+    } else {
+        console.warn('Checkbox not found for element:', elementId);
     }
 
     // Element-Styling aktualisieren
     const elementDiv = document.getElementById(`element-${elementId}`);
     if (elementDiv) {
-        const isVisited = visitedElements.has(elementId);
-        elementDiv.className = isVisited ? 'element-marker visited' : 'element-marker';
+        elementDiv.className = isNowVisited ? 'element-marker visited' : 'element-marker';
+        console.log('Updated element className to:', elementDiv.className);
+    } else {
+        console.warn('Element div not found for:', elementId);
     }
 
-    // Marker auf der Karte aktualisieren
-    markersLayer.clearMarkers();
-    updateUserMarker();
-    await addTourMarkers();
+    // Marker auf der Karte asynchron aktualisieren (ohne await, um UI-Blockierung zu vermeiden)
+    Promise.resolve().then(async () => {
+        markersLayer.clearMarkers();
+        updateUserMarker();
+        await addTourMarkers();
+        console.log('Map markers updated');
+    });
+
+    console.log('=== toggleVisited END ===');
 }
 
 // Manueller Trigger für Station
