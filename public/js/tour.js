@@ -52,12 +52,30 @@ async function loadImageAsDataUrl(url) {
 function loadVisitedElements() {
     const saved = localStorage.getItem(`visited_${tourId}`);
     if (saved) {
-        visitedElements = new Set(JSON.parse(saved));
+        try {
+            const parsed = JSON.parse(saved);
+            // Filter ungültige IDs (undefined, null, leere Strings)
+            const validIds = parsed.filter(id => id && id !== 'undefined' && id !== 'null');
+            visitedElements = new Set(validIds);
+            console.log('Loaded visited elements:', validIds);
+
+            // Wenn ungültige IDs gefunden wurden, LocalStorage bereinigen
+            if (validIds.length !== parsed.length) {
+                console.warn('Ungültige IDs im LocalStorage gefunden und entfernt:', parsed.filter(id => !id || id === 'undefined' || id === 'null'));
+                saveVisitedElements();
+            }
+        } catch (error) {
+            console.error('Fehler beim Laden der besuchten Elemente:', error);
+            visitedElements = new Set();
+        }
     }
 }
 
 function saveVisitedElements() {
-    localStorage.setItem(`visited_${tourId}`, JSON.stringify([...visitedElements]));
+    // Filter ungültige IDs vor dem Speichern
+    const validIds = [...visitedElements].filter(id => id && id !== 'undefined' && id !== 'null');
+    localStorage.setItem(`visited_${tourId}`, JSON.stringify(validIds));
+    console.log('Saved visited elements:', validIds);
 }
 
 // Push-Benachrichtigungen aktivieren
@@ -225,6 +243,15 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    // DEBUG: Prüfe ob URL-Parameter "resetVisited=1" gesetzt ist
+    if (urlParams.get('resetVisited') === '1') {
+        console.warn('RESET: Lösche alle besuchten Elemente für diese Tour');
+        localStorage.removeItem(`visited_${tourId}`);
+        visitedElements = new Set();
+        // Entferne den Parameter aus der URL
+        window.history.replaceState({}, '', window.location.pathname + '?id=' + tourId);
+    }
+
     // Besuchte Elemente aus LocalStorage laden
     loadVisitedElements();
 
@@ -237,6 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Tour laden
 async function loadTour() {
     try {
+        console.log('Loading tour with ID:', tourId);
         const response = await fetch(`${API_BASE}?id=${encodeURIComponent(tourId)}`);
 
         if (!response.ok) {
@@ -244,6 +272,19 @@ async function loadTour() {
         }
 
         tourData = await response.json();
+        console.log('Tour data loaded:', tourData);
+        console.log('Number of elements:', tourData.elemente?.length);
+
+        // Validierung: Prüfe ob alle Elemente eine ID haben
+        if (tourData.elemente) {
+            tourData.elemente.forEach((element, index) => {
+                if (!element.id) {
+                    console.error(`KRITISCHER FEHLER: Element ${index} hat keine ID!`, element);
+                } else {
+                    console.log(`Element ${index}: id="${element.id}", name="${element.name}"`);
+                }
+            });
+        }
 
         loadingElement.classList.add('hidden');
         tourContent.classList.remove('hidden');
@@ -723,9 +764,21 @@ window.toggleVisited = function(elementId) {
     console.log('Element ID:', elementId);
     console.log('visitedElements before:', Array.from(visitedElements));
 
-    // Validierung: elementId muss definiert sein
-    if (!elementId || elementId === 'undefined') {
-        console.error('Invalid elementId:', elementId);
+    // STRENGE Validierung: elementId muss definiert, nicht-leer und gültig sein
+    if (!elementId ||
+        typeof elementId !== 'string' ||
+        elementId === 'undefined' ||
+        elementId === 'null' ||
+        elementId.trim() === '') {
+        console.error('ABBRUCH: Ungültige elementId:', elementId, 'Type:', typeof elementId);
+        return;
+    }
+
+    // Prüfe ob das Element in den Tour-Daten existiert
+    const elementExists = tourData?.elemente?.some(e => e.id === elementId);
+    if (!elementExists) {
+        console.error('ABBRUCH: Element mit ID', elementId, 'existiert nicht in tourData');
+        console.log('Verfügbare Element-IDs:', tourData?.elemente?.map(e => e.id));
         return;
     }
 
