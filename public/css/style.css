@@ -335,6 +335,152 @@ main {
     50% { opacity: 0.7; }
 }
 
+/* Tour Page - Element Markers */
+.element-marker {
+    background: var(--color-white);
+    border-left: 4px solid var(--color-accent);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+}
+
+.element-marker.visited {
+    border-left-color: var(--color-success);
+    background-color: #f0f9f4;
+}
+
+.element-marker.near {
+    border-left-color: var(--color-danger);
+    animation: pulse-border 1.5s infinite;
+}
+
+@keyframes pulse-border {
+    0%, 100% {
+        border-left-width: 4px;
+        box-shadow: var(--box-shadow);
+    }
+    50% {
+        border-left-width: 6px;
+        box-shadow: 0 4px 12px rgba(239, 59, 64, 0.3);
+    }
+}
+
+.element-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.element-image {
+    width: 100%;
+    height: auto;
+    border-radius: var(--border-radius);
+    object-fit: cover;
+}
+
+.element-text h4 {
+    color: var(--color-primary);
+    margin-bottom: 0.5rem;
+    font-size: 1.3rem;
+}
+
+.element-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+}
+
+.checkbox-label:hover {
+    background-color: rgba(0, 50, 136, 0.05);
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: var(--color-success);
+}
+
+.checkbox-label span {
+    font-size: 0.95rem;
+    color: var(--color-text);
+}
+
+.distance-badge {
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+.distance-badge.very-near {
+    background-color: var(--color-danger);
+    color: var(--color-white);
+    animation: pulse 1s infinite;
+}
+
+.distance-badge.near {
+    background-color: #ffa500;
+    color: var(--color-white);
+}
+
+.distance-badge.far {
+    background-color: var(--color-success);
+    color: var(--color-white);
+}
+
+/* Status Bar */
+#status-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    padding: 1rem;
+    text-align: center;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 999;
+    transition: var(--transition);
+}
+
+#status-bar.active {
+    background-color: var(--color-success);
+}
+
+/* Responsive - Tablet and Desktop */
+@media (min-width: 768px) {
+    .element-content {
+        flex-direction: row;
+        align-items: flex-start;
+    }
+
+    .element-image {
+        max-width: 300px;
+        flex-shrink: 0;
+    }
+
+    .element-actions {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+}
+
 /* Admin Table */
 .admin-table {
     width: 100%;

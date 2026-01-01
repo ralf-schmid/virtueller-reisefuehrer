@@ -439,6 +439,23 @@ async function addTourMarkers() {
             );
 
             const marker = new OpenLayers.Marker(lonLat, icon.clone());
+
+            // WICHTIG: Click-Event für Marker - scrollt zum Element
+            marker.events.register('click', marker, function(evt) {
+                evt.stopPropagation();
+                const elementDiv = document.getElementById(`element-${element.id}`);
+                if (elementDiv) {
+                    elementDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    // Kurzes visuelles Feedback
+                    elementDiv.style.transition = 'background-color 0.3s';
+                    const originalBg = elementDiv.style.backgroundColor;
+                    elementDiv.style.backgroundColor = 'rgba(0, 50, 136, 0.1)';
+                    setTimeout(() => {
+                        elementDiv.style.backgroundColor = originalBg;
+                    }, 1000);
+                }
+            });
+
             markersLayer.addMarker(marker);
         } catch (error) {
             console.error('Fehler beim Erstellen des Markers für', element.name, error);
@@ -463,6 +480,22 @@ async function addTourMarkers() {
                     new OpenLayers.Pixel(-15, -30)
                 );
                 const marker = new OpenLayers.Marker(lonLat, icon);
+
+                // Click-Event auch für Fallback-Marker
+                marker.events.register('click', marker, function(evt) {
+                    evt.stopPropagation();
+                    const elementDiv = document.getElementById(`element-${element.id}`);
+                    if (elementDiv) {
+                        elementDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        elementDiv.style.transition = 'background-color 0.3s';
+                        const originalBg = elementDiv.style.backgroundColor;
+                        elementDiv.style.backgroundColor = 'rgba(0, 50, 136, 0.1)';
+                        setTimeout(() => {
+                            elementDiv.style.backgroundColor = originalBg;
+                        }, 1000);
+                    }
+                });
+
                 markersLayer.addMarker(marker);
             } catch (fallbackError) {
                 console.error('Auch Fallback-Marker fehlgeschlagen für', element.name, fallbackError);
@@ -575,10 +608,18 @@ function displayElements() {
     elementsContainer.innerHTML = '';
 
     tourData.elemente.forEach((element, index) => {
+        // KRITISCHE VALIDIERUNG: Prüfe ob element.id existiert
+        if (!element.id) {
+            console.error('Element ohne ID gefunden:', element);
+            return; // Überspringe Elemente ohne ID
+        }
+
         const elementDiv = document.createElement('div');
         const isVisited = visitedElements.has(element.id);
         elementDiv.className = isVisited ? 'element-marker visited' : 'element-marker';
         elementDiv.id = `element-${element.id}`;
+
+        console.log(`Creating element ${element.id}, visited: ${isVisited}, className: ${elementDiv.className}`);
 
         let distance = '';
         let dist = 0;
@@ -631,21 +672,23 @@ function displayElements() {
         `;
 
         // Event-Listener für Checkbox programmatisch hinzufügen
-        // Verwende querySelector innerhalb von elementDiv für isolierte Suche
         const checkbox = elementDiv.querySelector('input[type="checkbox"]');
         if (checkbox) {
-            // Stelle sicher, dass data-element-id korrekt gesetzt ist
-            checkbox.dataset.elementId = element.id;
+            const checkboxElementId = checkbox.getAttribute('data-element-id');
+            console.log(`Checkbox created for element ${element.id}, data-element-id="${checkboxElementId}"`);
 
             checkbox.addEventListener('change', function(event) {
-                // Verhindere Event-Propagation
                 event.stopPropagation();
 
-                const elemId = this.dataset.elementId;
+                // Lese elementId direkt aus dem data-Attribut
+                const elemId = this.getAttribute('data-element-id');
                 console.log('Checkbox changed for element:', elemId, 'Checked:', this.checked);
 
-                // Sofort togglen ohne auf async zu warten
-                toggleVisited(elemId);
+                if (elemId && elemId !== 'undefined' && elemId !== 'null') {
+                    toggleVisited(elemId);
+                } else {
+                    console.error('Invalid elementId from checkbox:', elemId, 'Original element.id:', element.id);
+                }
             });
         } else {
             console.error('Checkbox not found for element:', element.id);
