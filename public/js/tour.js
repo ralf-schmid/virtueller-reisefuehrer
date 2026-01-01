@@ -665,18 +665,37 @@ function displayElements() {
 
 // Element manuell als besucht/unbesucht markieren
 window.toggleVisited = async function(elementId) {
+    console.log('toggleVisited called for:', elementId);
+    console.log('visitedElements before:', Array.from(visitedElements));
+
     if (visitedElements.has(elementId)) {
         visitedElements.delete(elementId);
+        console.log('Removed', elementId, 'from visitedElements');
     } else {
         visitedElements.add(elementId);
+        console.log('Added', elementId, 'to visitedElements');
     }
+
+    console.log('visitedElements after:', Array.from(visitedElements));
     saveVisitedElements();
 
-    // UI aktualisieren
+    // Nur die spezifische Checkbox aktualisieren statt alles neu zu rendern
+    const checkbox = document.getElementById(`checkbox-${elementId}`);
+    if (checkbox) {
+        checkbox.checked = visitedElements.has(elementId);
+    }
+
+    // Element-Styling aktualisieren
+    const elementDiv = document.getElementById(`element-${elementId}`);
+    if (elementDiv) {
+        const isVisited = visitedElements.has(elementId);
+        elementDiv.className = isVisited ? 'element-marker visited' : 'element-marker';
+    }
+
+    // Marker auf der Karte aktualisieren
     markersLayer.clearMarkers();
     updateUserMarker();
     await addTourMarkers();
-    displayElements();
 }
 
 // Manueller Trigger für Station
