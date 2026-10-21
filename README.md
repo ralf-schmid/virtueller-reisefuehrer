@@ -297,12 +297,6 @@ docker exec virtuelle-stadtfuehrungen tail -f /var/log/php_errors.log
 docker exec virtuelle-stadtfuehrungen tail -f /var/log/apache2/*.log /var/log/php_errors.log
 ```
 
-**API-Test-Script:**
-```bash
-# Datei-Berechtigungen und Schreibrechte testen
-docker exec virtuelle-stadtfuehrungen php /var/www/html/api/test.php
-```
-
 ## 🛠️ Entwicklung
 
 ### Lokale Entwicklung starten

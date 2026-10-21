@@ -35,20 +35,11 @@ sleep 10
 ### Schritt 4: PHP-Funktionalität testen
 
 ```bash
-# Test 1: Einfacher JSON-Test
-curl https://stadtrundgang.ralf-schmid.de/api/test-json.php
-
-# Erwartete Ausgabe:
-# {"status":"ok","message":"PHP works!","timestamp":1234567890,"php_version":"8.2.x"}
-
-# Test 2: Tours API
+# Tours API
 curl https://stadtrundgang.ralf-schmid.de/api/tours.php
 
 # Erwartete Ausgabe:
 # [] (leeres Array) oder JSON mit Touren
-
-# Test 3: PHPInfo (Optional - danach löschen!)
-curl https://stadtrundgang.ralf-schmid.de/phpinfo.php
 ```
 
 ### Schritt 5: Logs prüfen
@@ -181,7 +172,7 @@ docker-compose build --no-cache
 docker-compose up -d
 
 # 5. Testen
-curl https://ihre-domain.de/api/test-json.php
+curl https://ihre-domain.de/api/tours.php
 ```
 
 ## ⚡ Performance-Optimierung
@@ -226,7 +217,7 @@ Erstellen Sie `public/.htaccess` mit:
 
 ### Produktions-Checkliste
 
-- [ ] `phpinfo.php` löschen oder schützen
+- [x] `phpinfo.php` und Test-Scripts entfernt (keine Versions-/Konfig-Infos öffentlich)
 - [ ] Display errors deaktiviert (ist bereits in Dockerfile)
 - [ ] HTTPS aktiviert (Reverse Proxy)
 - [ ] Rate Limiting für API (Reverse Proxy)
