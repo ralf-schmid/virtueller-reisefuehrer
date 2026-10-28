@@ -1,5 +1,5 @@
 # Multi-stage Dockerfile für virtuelle Stadtführungen
-FROM php:8.2-apache AS production
+FROM php:8.4-apache AS production
 
 # Metadata
 LABEL maintainer="Virtual City Tours"
@@ -29,8 +29,8 @@ RUN { \
 # Härtung PHP2Shell (CVE-2026-109618/-109619): Upload-Progress abschalten (wird nicht genutzt)
 # und Build abbrechen, falls das Basis-Image noch eine ungepatchte PHP-Version liefert
 RUN echo "session.upload_progress.enabled = Off" > /usr/local/etc/php/conf.d/security.ini \
-    && php -r 'exit(version_compare(PHP_VERSION, "8.2.35", "<") ? 1 : 0);' \
-    || (echo "PHP $(php -r 'echo PHP_VERSION;') ist verwundbar (CVE-2026-109618/-109619), mind. 8.2.35 nötig" && exit 1)
+    && php -r 'exit(version_compare(PHP_VERSION, "8.4.27", "<") ? 1 : 0);' \
+    || (echo "PHP $(php -r 'echo PHP_VERSION;') ist verwundbar (CVE-2026-109618/-109619), mind. 8.4.27 nötig" && exit 1)
 
 # Apache-Konfiguration: AllowOverride für .htaccess aktivieren
 RUN echo '<Directory /var/www/html/>\n\

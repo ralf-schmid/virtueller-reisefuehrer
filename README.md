@@ -147,7 +147,7 @@ Die App verwendet ein kulturell ansprechendes, warmes Farbschema:
 - **OpenLayers 2.13.1**: Kartendarstellung
 
 ### Backend
-- **PHP 8.2**: REST API, JSON-Verarbeitung
+- **PHP 8.4**: REST API, JSON-Verarbeitung
 - **Apache**: Webserver
 
 ### DevOps
